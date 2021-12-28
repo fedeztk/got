@@ -6,7 +6,7 @@ got(ranslation), a simple translator build on top of [[https://github.com/soimor
 Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected...
 #+END_QUOTE
 ** Demo
-[[./media/got.gif]]
+[[./media/got.mp4]]
 
 * Usage
 - install dependencies:
@@ -23,7 +23,6 @@ go get -u https://github.com/fedeztk/got
 #+begin_src shell
 got
 #+end_src
-
 * Testing
 Development is done through =docker=, build the container with:
 #+begin_src shell
