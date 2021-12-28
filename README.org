@@ -14,12 +14,10 @@ Disclaimer: this is my absolute first project in golang, so bugs and clunky code
   #+begin_src shell
 pacman -S go trans
   #+end_src
-
 - install =got=:
   #+begin_src shell
 go get -u https://github.com/fedeztk/got
   #+end_src
-
 - run it:
 #+begin_src shell
 got
