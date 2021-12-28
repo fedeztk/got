@@ -19,9 +19,9 @@ pacman -S go trans
 go get -u https://github.com/fedeztk/got
   #+end_src
 - run it:
-#+begin_src shell
+  #+begin_src shell
 got
-#+end_src
+  #+end_src
 * Testing
 Development is done through =docker=, build the container with:
 #+begin_src shell
