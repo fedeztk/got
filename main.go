@@ -40,6 +40,7 @@ var (
 	// prompt
 	promptStyleIndicator = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
     promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("15"))
+    promptStyleSelLang = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
 	// spinner
 	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 	// list
@@ -143,8 +144,8 @@ func newModel() *model {
 		spinner:      s,
 		langListKeys: keys,
 		state:        TYPING,
-		source:       langStr[0].(item).title,
-		target:       langStr[1].(item).title,
+		source:       langStr[0].(item).desc,
+		target:       langStr[1].(item).desc,
 	}
 }
 
@@ -273,7 +274,9 @@ func (m model) View() string {
 			tab.Render("Language selection"),
 			tab.Render("Translation"),
 		)
-		content = promptStyleUpperText.Render("Enter sentence") + fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
+		content = promptStyleUpperText.Render("Enter sentence") +
+		          promptStyleSelLang.Render(fmt.Sprintf("Translating %s →  %s", m.source, m.target)) + 
+                  fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
 	case LOADING:
 		row = lipgloss.JoinHorizontal(
 			lipgloss.Top,

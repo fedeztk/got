@@ -1,7 +1,12 @@
 #+TITLE: got
 
-* got(ranslation)
-Simple translator build on top of =trans= and the awesome bubbletea tui library.
+got(ranslation), a simple translator build on top of [[https://github.com/soimort/translate-shell][trans]] and the awesome [[https://github.com/charmbracelet/bubbletea#libraries-we-use-with-bubble-tea][bubbletea]] tui library.
+
+#+BEGIN_QUOTE
+Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected...
+#+END_QUOTE
+** Demo
+[[./media/got.gif]]
 
 * Usage
 - install dependencies:
@@ -24,19 +29,11 @@ Development is done through =docker=, build the container with:
 #+begin_src shell
 docker build -t got .
 #+end_src
-
 Check that the build went fine:
 #+begin_src shell
 docker images | grep got
 #+end_src
-
 Test it with:
 #+begin_src shell
 docker run -it -e "TERM=xterm-256color" got
 #+end_src
-
-You are done!
-
-<#+begin_quote
-Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected...
-#+end_quote
