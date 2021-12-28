@@ -6,7 +6,8 @@ got(ranslation), a simple translator build on top of [[https://github.com/soimor
 Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected...
 #+END_QUOTE
 ** Demo
-[[./media/got.mp4]]
+[[./media/got.gif]]
+[[./media/got.mp4][higher quality mp4 here]]
 
 * Usage
 - install dependencies:
