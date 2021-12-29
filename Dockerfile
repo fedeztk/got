@@ -3,5 +3,4 @@ RUN apk add --no-cache translate-shell
 WORKDIR /build
 COPY . .
 RUN go build -o got
-# enable tty
 CMD ["./got"]
