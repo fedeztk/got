@@ -34,7 +34,7 @@ func NewConfig() *Config {
 func readLanguages() []list.Item {
     err := viper.ReadInConfig()
     if err != nil {
-        panic(fmt.Errorf("%s\ngot needs a config file to work! Copy the sample from %s", err, REPOCONFIG))
+        panic(fmt.Errorf("%s\ngot needs a config file to work! Copy the sample in ~/.config/got/config.yml from %s", err, REPOCONFIG))
     }
 
 	items := make([]list.Item, 0)

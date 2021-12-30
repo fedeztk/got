@@ -17,17 +17,19 @@ pacman -S go trans
 #+begin_src shell
 go get -u https://github.com/fedeztk/got
 #+end_src
+- copy [[https://github.com/fedeztk/got/blob/master/config.yml][the sample config]] file under ~/.config/got/ as config.yml
 - run it:
 #+begin_src shell
 got
 #+end_src
 * Features
 - interact with google translate through translate-shell easily via the terminal
-- clean interface with 3 tabs, switch between them with tab and shift-tab:
+- clean interface with 3 tabs, switch between them with tab/shift-tab:
   + *text input*: input the sentence you want to translate, press enter to translate
   + *language selection*: choose between 121 languages, select source language with *s*, target with *t*
   + *translation*: pager that shows the result of translation
 - quit anytime with esc or ctrl-c
+- automatically remembers the last languages used
 * Testing
 Development is done through =docker=, build the container with:
 #+begin_src shell
