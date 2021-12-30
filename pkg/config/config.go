@@ -1,11 +1,17 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/fedeztk/got/pkg/model"
 	"github.com/spf13/viper"
+)
+
+const (
+    REPO = "https://github.com/fedeztk/got"
+    REPOCONFIG = "https://github.com/fedeztk/got/blob/master/config.yml"
 )
 
 type Config struct {
@@ -28,7 +34,7 @@ func NewConfig() *Config {
 func readLanguages() []list.Item {
     err := viper.ReadInConfig()
     if err != nil {
-        panic(err)
+        panic(fmt.Errorf("%s\ngot needs a config file to work! Copy the sample from %s", err, REPOCONFIG))
     }
 
 	items := make([]list.Item, 0)
@@ -48,10 +54,16 @@ type write struct {
 }
 
 func writeConfig(w ...write) {
+    modified := false
     for _, item := range w {
-        viper.Set(item.key, item.value)
+        if viper.GetString(item.key) != item.value {
+            viper.Set(item.key, item.value)
+            modified = true
+        }
     }
-    viper.WriteConfig()
+    if modified {
+        viper.WriteConfig()
+    }
 }
 
 func (c *Config) Langs() []list.Item {

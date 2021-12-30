@@ -1,5 +1,5 @@
 #+TITLE: got
-got(ranslation), a simple translator build on top of [[https://github.com/soimort/translate-shell][trans]] and the awesome [[https://github.com/charmbracelet/bubbletea#libraries-we-use-with-bubble-tea][bubbletea]] tui library.
+got(ranslation), a simple translator build on top of [[https://github.com/soimort/translate-shell][translate-shell]] and the awesome [[https://github.com/charmbracelet/bubbletea][bubbletea]] tui library.
 
 #+BEGIN_QUOTE
 Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected...
