@@ -1,0 +1,124 @@
+languages: |-
+  Afrikaans      -   af
+  Bahasa Indonesia-   id
+  Русский        -   ru
+  አማርኛ           -   am
+  Igbo           -   ig
+  ﻱﮅﻨﺳ           -   sd
+  ﺔﻴﺑﺮﻌﻟﺍ        -   ar
+  Íslenska       -   is
+  සිංහල           -   si
+  Azərbaycanca   -   az
+  Italiano       -   it
+  Slovenčina     -   sk
+  башҡорт теле   -   ba
+  日本語         -   ja
+  Slovenščina    -   sl
+  беларуская     -   be
+  Basa Jawa      -   jv
+  Gagana Sāmoa   -   sm
+  български      -   bg
+  ქართული        -   ka
+  chiShona       -   sn
+  বাংলা          -   bn
+  Қазақ тілі     -   kk
+  Soomaali       -   so
+  Bosanski       -   bs
+  ភាសាខ្មែរ       -   km
+  Shqip          -   sq
+  Català         -   ca
+  ಕನ್ನಡ           -   kn
+  српски         -sr Cyrl
+  Cebuano        -  ceb
+  한국어         -   ko
+  srpski         -sr Latn
+  Corsu          -   co
+  Kurdî          -   ku
+  Sesotho        -   st
+  Čeština        -   cs
+  Кыргызча       -   ky
+  Basa Sunda     -   su
+  Cymraeg        -   cy
+  Latina         -   la
+  Svenska        -   sv
+  Dansk          -   da
+  Lëtzebuergesch -   lb
+  Kiswahili      -   sw
+  Deutsch        -   de
+  ລາວ            -   lo
+  தமிழ்           -   ta
+  Ελληνικά       -   el
+  Lietuvių       -   lt
+  తెలుగు          -   te
+  Emoji          -  emj
+  Latviešu       -   lv
+  Тоҷикӣ         -   tg
+  English        -   en
+  Malagasy       -   mg
+  ไทย            -   th
+  Esperanto      -   eo
+  Олык марий     -  mhr
+  Tagalog        -   tl
+  Español        -   es
+  Māori          -   mi
+  tlhIngan Hol   -  tlh
+  Eesti          -   et
+  Македонски     -   mk
+         tlh-Qaak
+  Euskara        -   eu
+  മലയാളം         -   ml
+  Lea faka Tonga -   to
+  ﯽﺳﺭﺎﻓ          -   fa
+  Монгол         -   mn
+  Türkçe         -   tr
+  Suomi          -   fi
+  मराठी          -   mr
+  татарча        -   tt
+  Vosa Vakaviti  -   fj
+  Кырык мары     -  mrj
+  Reo Tahiti     -   ty
+  Français       -   fr
+  Bahasa Melayu  -   ms
+  удмурт         -  udm
+  Frysk          -   fy
+  Malti          -   mt
+  Українська     -   uk
+  Gaeilge        -   ga
+  Hmoob Daw      -  mww
+  ﻭﺩُﺭﺍُ           -   ur
+  Gàidhlig       -   gd
+  မြန်မာစာ        -   my
+  Oʻzbek tili    -   uz
+  Galego         -   gl
+  नेपाली          -   ne
+  Tiếng Việt     -   vi
+  ગુજરાતી         -   gu
+  Nederlands     -   nl
+  isiXhosa       -   xh
+  Hausa          -   ha
+  Norsk          -   no
+  שידיִי          -   yi
+  ʻŌlelo Hawaiʻi -  haw
+  Nyanja         -   ny
+  Yorùbá         -   yo
+  תירִבְעִ          -   he
+  Hñąñho         -  otq
+  Màaya T'àan    -  yua
+  हिन्दी          -   hi
+  ਪੰਜਾਬੀ          -   pa
+  粵語           -  yue
+  Hmoob          -  hmn
+  Papiamentu     -  pap
+  简体中文       - zh CN
+  Hrvatski       -   hr
+  Polski         -   pl
+  正體中文       - zh TW
+  Kreyòl Ayisyen -   ht
+  ﻮﺘښﭘ           -   ps
+  isiZulu        -   zu
+  Magyar         -   hu
+  Português      -   pt
+  Հայերեն        -   hy
+  Română         -   ro
+source: it
+target: fr

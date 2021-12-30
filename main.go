@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/fedeztk/got/pkg/config"
 	"github.com/fedeztk/got/pkg/model"
 )
 
@@ -43,7 +44,7 @@ func main() {
 	case *showVersion:
 		fmt.Println(gotVersion)
 	default:
-		model.Run()
+		model.Run(config.NewConfig())
 	}
     os.Exit(0)
 }

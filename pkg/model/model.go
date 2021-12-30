@@ -1,7 +1,6 @@
 package model
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,27 +23,26 @@ const (
 	TRANSLATING        // translation tab
 	LOADING            // loading inside input tab
 	// pager
-	headerHeight = 6  // 3 + 3 (padding of tabs)
+	headerHeight = 6 // 3 + 3 (padding of tabs)
 	footerHeight = 3
 	// list
 	listHeight = 34
 	listWidth  = 14
-	configFile = "lang.conf"
 )
 
 var (
 	states = []int{TYPING, CHOOSING, TRANSLATING, LOADING}
 	// prompt
 	promptStyleIndicator = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-    promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("15"))
-    promptStyleSelLang = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
+	promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("15"))
+	promptStyleSelLang   = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
 	// spinner
 	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 	// list
-	titleStyle        = lipgloss.NewStyle().Background(lipgloss.Color("3")).Padding(0, 1).Foreground(lipgloss.Color("15"))
-	paginationStyle   = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle         = list.DefaultStyles().HelpStyle.PaddingLeft(4)
-    statusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).MarginLeft(2).Bold(true)
+	titleStyle         = lipgloss.NewStyle().Background(lipgloss.Color("3")).Padding(0, 1).Foreground(lipgloss.Color("15"))
+	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
+	helpStyle          = list.DefaultStyles().HelpStyle.PaddingLeft(4)
+	statusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).MarginLeft(2).Bold(true)
 	// tabs
 	docStyle        = lipgloss.NewStyle().Align(lipgloss.Center)
 	activeTabBorder = lipgloss.Border{
@@ -107,6 +105,15 @@ type keyMapList struct {
 	sourceLangKey, targetLangKey key.Binding
 }
 
+type Config interface {
+	Langs() []list.Item
+	Source() string
+	Target() string
+	RememberLastLangs(source, target string)
+}
+
+var conf Config
+
 func newModel() *model {
 	t := textinput.NewModel()
 	t.Placeholder = "your text here"
@@ -118,12 +125,12 @@ func newModel() *model {
 	s.Style = spinnerStyle
 
 	keys := getKeyMapLangList()
-    langStr := readLanguages()
-	l := list.NewModel(langStr, list.NewDefaultDelegate(), listWidth, listHeight)
+	confLangs := conf.Langs()
+	l := list.NewModel(confLangs, list.NewDefaultDelegate(), listWidth, listHeight)
 	l.Title = "Available languages"
 	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey} }
-    l.Help.ShowAll = true
-    l.Styles.Title = titleStyle
+	l.Help.ShowAll = true
+	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
 
@@ -133,12 +140,13 @@ func newModel() *model {
 		spinner:      s,
 		langListKeys: keys,
 		state:        TYPING,
-		source:       langStr[0].(item).desc,
-		target:       langStr[1].(item).desc,
+		source:       conf.Source(),
+		target:       conf.Target(),
 	}
 }
 
-func Run() {
+func Run(c Config) {
+	conf = c
 	initialModel := newModel()
 
 	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
@@ -161,20 +169,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 
-		switch {
-		case key.Matches(msg, m.langListKeys.sourceLangKey):
-			m.source = m.langList.SelectedItem().(item).desc
-            statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Source language: " + m.langList.SelectedItem().(item).title))
-            cmds = append(cmds, statusCmd)
-		case key.Matches(msg, m.langListKeys.targetLangKey):
-			m.target = m.langList.SelectedItem().(item).desc
-            statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Target language: " + m.langList.SelectedItem().(item).title))
-            cmds = append(cmds, statusCmd)
+		if m.state == CHOOSING {
+			switch {
+			case key.Matches(msg, m.langListKeys.sourceLangKey):
+				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
+				m.source = abbreviation
+				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Source language: " + title))
+				cmds = append(cmds, statusCmd)
+			case key.Matches(msg, m.langListKeys.targetLangKey):
+				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
+				m.target = abbreviation
+				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Target language: " + title))
+				cmds = append(cmds, statusCmd)
+			}
 		}
 
 		switch msg.String() {
 		case "ctrl+c":
-			// m.rememberLastLangs()
+			conf.RememberLastLangs(m.source, m.target)
 			return m, tea.Quit
 
 		case "tab":
@@ -258,8 +270,8 @@ func (m model) View() string {
 			tab.Render("Translation"),
 		)
 		content = promptStyleUpperText.Render("Enter sentence") +
-		          promptStyleSelLang.Render(fmt.Sprintf("Translating %s →  %s", m.source, m.target)) + 
-                  fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
+			promptStyleSelLang.Render(fmt.Sprintf("Translating %s →  %s", m.source, m.target)) +
+			fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
 	case LOADING:
 		row = lipgloss.JoinHorizontal(
 			lipgloss.Top,
@@ -320,7 +332,7 @@ func (m *model) switchTab(direction int) {
 
 func (m model) formatTranslation() string {
 	footerTop := "╭──────╮"
-    percentStr := fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100)
+	percentStr := fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100)
 	footerMid := "┤ " + footerTextStyle.Render(percentStr) + footerStyle.Render(" │")
 	// footerMid := fmt.Sprintf("┤ %3.f%% │", m.viewport.ScrollPercent()*100)
 	footerBot := "╰──────╯"
@@ -333,36 +345,16 @@ func (m model) formatTranslation() string {
 	return fmt.Sprintf("%s\n%s", m.viewport.View(), footerStyle.Render(footer))
 }
 
-// list items
 type item struct {
-	title, desc string
+	title, abbreviation string
 }
 
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
+func (i item) Title() string        { return i.title }
+func (i item) Description() string { return i.abbreviation }
+func (i item) FilterValue() string  { return i.title }
 
-func readLanguages() []list.Item {
-	file, err := os.Open(configFile)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	items := make([]list.Item, 0)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line[0] == '#' || len(line) == 0 {
-			continue
-		}
-		fields := strings.Split(line, "-")
-		items = append(items, item{strings.TrimSpace(fields[0]), strings.TrimSpace(fields[1])})
-	}
-
-	return items
+func NewListItem(title, abbreviation string) item {
+	return item{title, abbreviation}
 }
 
 func getKeyMapLangList() keyMapList {
@@ -376,33 +368,4 @@ func getKeyMapLangList() keyMapList {
 			key.WithHelp("t", "choose target language"),
 		),
 	}
-}
-
-func (m model) rememberLastLangs() {
-	file, err := os.Open(configFile)
-	if err != nil {
-		panic(err)
-	}
-
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	// TODO: bisogna trovare un modo per salvare la lingua
-	newLanguages := fmt.Sprintf("%s-%s", m.source, m.target)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line[0] == '#' || len(line) == 0 {
-			continue
-		}
-		fields := strings.Split(line, "-")
-
-		lang, initial := strings.TrimSpace(fields[0]), strings.TrimSpace(fields[1])
-
-		if initial != m.source && initial != m.target {
-			newLanguages += fmt.Sprintf("\n%s-%s", lang, initial)
-		}
-	}
-
-	file.WriteString(newLanguages)
 }
