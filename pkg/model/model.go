@@ -168,6 +168,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.langList.FilterState() == list.Filtering {
+			break
+		}
 
 		if m.state == CHOOSING {
 			switch {
@@ -185,7 +188,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		switch msg.String() {
-		case "ctrl+c":
+		case "ctrl+c", "esc":
 			conf.RememberLastLangs(m.source, m.target)
 			return m, tea.Quit
 
@@ -210,14 +213,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		verticalMargins := headerHeight + footerHeight
 
-		// first time receiving terminal size, we don't have a viewport yet
-		if !m.termInfoReady {
+		// update pager
+		if !m.termInfoReady { // first time receiving terminal size, we don't have a viewport yet
 			m.viewport = viewport.Model{Width: msg.Width, Height: msg.Height - verticalMargins}
 			m.termInfoReady = true
 		} else { // resize according to the new terminal size
 			m.viewport.Width = msg.Width
 			m.viewport.Height = msg.Height - verticalMargins
 		}
+
+		// update language list
 		m.langList.SetWidth(msg.Width)
 
 		// translation fetched
@@ -334,7 +339,6 @@ func (m model) formatTranslation() string {
 	footerTop := "╭──────╮"
 	percentStr := fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100)
 	footerMid := "┤ " + footerTextStyle.Render(percentStr) + footerStyle.Render(" │")
-	// footerMid := fmt.Sprintf("┤ %3.f%% │", m.viewport.ScrollPercent()*100)
 	footerBot := "╰──────╯"
 	gapSize := m.viewport.Width - (runewidth.StringWidth(percentStr) + 4)
 	footerTop = strings.Repeat(" ", gapSize) + footerTop
@@ -349,9 +353,9 @@ type item struct {
 	title, abbreviation string
 }
 
-func (i item) Title() string        { return i.title }
+func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.abbreviation }
-func (i item) FilterValue() string  { return i.title }
+func (i item) FilterValue() string { return i.title }
 
 func NewListItem(title, abbreviation string) item {
 	return item{title, abbreviation}
