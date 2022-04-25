@@ -1,10 +1,10 @@
 
 # Table of Contents
 
-    1.  [Demo](#orgab62fc1)
-1.  [Usage](#orgfa2aa9c)
-2.  [Features](#org26baa6c)
-3.  [Testing](#org2744438)
+[Demo](#orgab62fc1)
+[Usage](#orgfa2aa9c)
+[Features](#org26baa6c)
+[Testing](#org2744438)
 
 got(ranslation), a simple translator build on top of [translate-shell](https://github.com/soimort/translate-shell) and the awesome [bubbletea](https://github.com/charmbracelet/bubbletea) tui library.
 
@@ -15,9 +15,7 @@ got(ranslation), a simple translator build on top of [translate-shell](https://g
 
 ## Demo
 
-![img](./media/got.gif)
-[higher quality mp4 here](./media/got.mp4)
-
+https://user-images.githubusercontent.com/58485208/165116687-95017b2b-1e1b-4c82-b5ac-dc2cda87afe0.mp4
 
 <a id="orgfa2aa9c"></a>
 
