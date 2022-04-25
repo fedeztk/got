@@ -1,8 +1,8 @@
 all:
-	go run cmd/got/main.go
-
-build:
 	go build -o got cmd/got/main.go
+
+run:
+	go run cmd/got/main.go
 
 clean:
 	@if [ -f got ] && [ -x got ]; then \
