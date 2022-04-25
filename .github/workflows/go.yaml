@@ -1,0 +1,21 @@
+name: Go CICD pipeline
+
+on:
+  push:
+    branches: [ master, rewrite ]
+  pull_request:
+    branches: [ master, rewrite ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      - name: build cli
+        run: make
+      - name: testing translator package
+        run: cd ./pkg/translator && go test -v
