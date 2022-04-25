@@ -1,5 +1,6 @@
+# got [![Go](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml)
 
-# Table of Contents
+## Table of Contents
 
 [Demo](#orgab62fc1)
 [Usage](#orgfa2aa9c)
