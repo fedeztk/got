@@ -1,4 +1,4 @@
-# got [![Go](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml)
+# got [![Go](https://github.com/fedeztk/got/actions/workflows/go.yml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml)
 
 ## Table of Contents
 
