@@ -6,35 +6,31 @@ import (
 )
 
 func TestTranslation(t *testing.T) {
-    var resJSON []byte
+	testCases := []struct {
+		text, source, target string
+	}{
+		{"coperchio", "it", "en"},
+		{"HelloWorld!", "en", "it"},
+		{"corsa", "it", "en"},
+		{"exit", "en", "it"},
+	}
+	for _, tc := range testCases {
+        res, err := Translate(tc.text, tc.source, tc.target)
+		if err != nil {
+			t.Error(err)
+		}
+        resJSON, err := json.MarshalIndent(res, "", "    ")
+		if err != nil {
+			t.Error(err)
+		}
+		t.Log(string(resJSON))
+	}
+}
 
-	res, err := Translate("Hello World!", "en", "it")
+func TestPrettyPrint(t *testing.T) {
+	res, err := Translate("coperchio", "it", "en")
 	if err != nil {
 		t.Error(err)
 	}
-    resJSON, err = json.MarshalIndent(res, "", "    ")
-	if err != nil {
-        panic(err)
-	}
-	t.Log(string(resJSON))
-
-	res, err = Translate("coperchio", "it", "en")
-	if err != nil {
-		t.Error(err)
-	}
-	resJSON, err = json.MarshalIndent(res, "", "    ")
-	if err != nil {
-        panic(err)
-	}
-	t.Log(string(resJSON))
-
-	res, err = Translate("corsa", "it", "en")
-	if err != nil {
-		t.Error(err)
-	}
-	resJSON, err = json.MarshalIndent(res, "", "    ")
-	if err != nil {
-        panic(err)
-	}
-	t.Log(string(resJSON))
+	t.Log(res.PrettyPrint())
 }

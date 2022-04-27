@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -13,6 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/fedeztk/got/pkg/translator"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -34,12 +34,12 @@ var (
 	states = []int{TYPING, CHOOSING, TRANSLATING, LOADING}
 	// prompt
 	promptStyleIndicator = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-	promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("15"))
+	promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("0"))
 	promptStyleSelLang   = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
 	// spinner
 	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
 	// list
-	titleStyle         = lipgloss.NewStyle().Background(lipgloss.Color("3")).Padding(0, 1).Foreground(lipgloss.Color("15"))
+	titleStyle         = lipgloss.NewStyle().Background(lipgloss.Color("11")).Bold(true).Padding(0, 1).Foreground(lipgloss.Color("0"))
 	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle          = list.DefaultStyles().HelpStyle.PaddingLeft(4)
 	statusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).MarginLeft(2).Bold(true)
@@ -311,11 +311,11 @@ func (m model) View() string {
 
 func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
-		text, err := exec.Command("trans", "-t", m.target, "-s", m.source, query).Output()
+		text, err := translator.Translate(query, m.source, m.target)
 		if err != nil {
 			return gotTrans{Err: err}
 		}
-		return gotTrans{result: string(text)}
+		return gotTrans{result: text.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s", m.source, m.target))}
 	}
 }
 

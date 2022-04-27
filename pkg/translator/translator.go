@@ -83,6 +83,7 @@ type Response struct {
 		Definition    string `json:"definition,omitempty"`
 		Dictionary    string `json:"dictionary,omitempty"`
 		UseInSentence string `json:"use-in-sentence,omitempty"`
+		Synonyms map[string][]string `json:"synonyms,omitempty"`
 	} `json:"definitions"`
 	TranslatedText    string `json:"translated-text"`
 	SingleTranslation map[string]map[string]struct {
