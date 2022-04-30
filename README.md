@@ -24,16 +24,16 @@ https://user-images.githubusercontent.com/58485208/165116687-95017b2b-1e1b-4c82-
 
 -   install dependencies:
 
-    pacman -S go translate-shell
+    	pacman -S go translate-shell
 
 -   install `got`:
 
-    go get -u https://github.com/fedeztk/got
+		go get -u https://github.com/fedeztk/got
 
 -   copy [the sample config](https://github.com/fedeztk/got/blob/master/config.yml) file under ~/.config/got/ as config.yml
 -   run it:
 
-    got
+    	got
 
 
 <a id="org26baa6c"></a>

@@ -25,6 +25,10 @@ func loadLanguageMap() map[string]string {
 	return m
 }
 
+func GetAllLanguages() map[string]string {
+	return languageMap
+}
+
 func Translate(text, source, target string) (Response, error) {
 	r := Response{}
 	t := struct {
@@ -52,8 +56,9 @@ func Translate(text, source, target string) (Response, error) {
 		return r, errors.New("target language not supported")
 	}
 
-	const translateURL = "https://simplytranslate.org/api/translate/?engine=google"
-	req, err := http.NewRequest("GET", translateURL, nil)
+	const translateURL = "https://simplytranslate.org/api/translate/?engine="
+	const engine = "google"
+	req, err := http.NewRequest("GET", translateURL+engine, nil)
 	if err != nil {
 		return r, err
 	}
@@ -80,10 +85,11 @@ func Translate(text, source, target string) (Response, error) {
 
 type Response struct {
 	DefinitionsByCategory map[string][]struct {
-		Definition    string `json:"definition,omitempty"`
-		Dictionary    string `json:"dictionary,omitempty"`
-		UseInSentence string `json:"use-in-sentence,omitempty"`
-		Synonyms map[string][]string `json:"synonyms,omitempty"`
+		Definition    string              `json:"definition,omitempty"`
+		Dictionary    string              `json:"dictionary,omitempty"`
+		UseInSentence string              `json:"use-in-sentence,omitempty"`
+		Synonyms      map[string][]string `json:"synonyms,omitempty"`
+		Informal      string              `json:"informal,omitempty"`
 	} `json:"definitions"`
 	TranslatedText    string `json:"translated-text"`
 	SingleTranslation map[string]map[string]struct {

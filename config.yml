@@ -120,5 +120,5 @@ languages: |-
   Português      -   pt
   Հայերեն        -   hy
   Română         -   ro
-source: it
-target: fr
+source: en
+target: it
