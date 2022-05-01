@@ -10,7 +10,7 @@ import (
 var (
 	indentOne   = lipgloss.NewStyle().Margin(0, 0, 0, 2)
 	indentTwo   = indentOne.Copy().Margin(0, 0, 0, 4)
-	indentThree = indentTwo.Copy().Margin(0, 0, 0, 6).Width(80)
+	indentThree = indentTwo.Copy().Margin(0, 0, 0, 6).MaxWidth(80)
 	title       = indentOne.Copy().Bold(true).Background(lipgloss.Color("12")).Padding(0, 1).Foreground(lipgloss.Color("0"))
 	titleSec    = indentTwo.Copy().Bold(true).Background(lipgloss.Color("13")).Padding(0, 1).Foreground(lipgloss.Color("0")).MarginBottom(1).MarginTop(1)
 	listItem    = indentTwo.Copy().Bold(true)

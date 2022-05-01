@@ -17,7 +17,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+	viper.SetConfigType("yml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("$HOME/.config/got")
 
