@@ -26,14 +26,15 @@ const (
 	headerHeight = 6 // 3 + 3 (padding of tabs)
 	footerHeight = 3
 	// list
-	listHeight = 34
-	listWidth  = 14
+	defaultListHeight = 34
+	defaultListWidth  = 14
 )
 
 var (
 	states = []int{TYPING, CHOOSING, TRANSLATING, LOADING}
 	// prompt
 	promptStyleIndicator = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+	placeholderStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("0"))
 	promptStyleSelLang   = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
 	// spinner
@@ -106,7 +107,7 @@ type keyMapList struct {
 }
 
 type Config interface {
-	Langs() []list.Item
+	// Langs() []list.Item
 	Source() string
 	Target() string
 	RememberLastLangs(source, target string)
@@ -117,6 +118,7 @@ var conf Config
 func newModel() *model {
 	t := textinput.NewModel()
 	t.Placeholder = "your text here"
+	t.PlaceholderStyle = placeholderStyle
 	t.PromptStyle = promptStyleIndicator
 	t.Focus()
 
@@ -125,11 +127,11 @@ func newModel() *model {
 	s.Style = spinnerStyle
 
 	keys := getKeyMapLangList()
-	confLangs := conf.Langs()
-	l := list.NewModel(confLangs, list.NewDefaultDelegate(), listWidth, listHeight)
+	// confLangs := conf.Langs()
+	l := list.New(getConfLangs(), list.NewDefaultDelegate(), defaultListWidth, defaultListHeight)
 	l.Title = "Available languages"
 	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey} }
-	l.Help.ShowAll = true
+	// l.Help.ShowAll = true
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
 	l.Styles.HelpStyle = helpStyle
@@ -143,6 +145,15 @@ func newModel() *model {
 		source:       conf.Source(),
 		target:       conf.Target(),
 	}
+}
+
+func getConfLangs() []list.Item {
+	items := make([]list.Item, 0)
+
+	for abbrev, title := range translator.GetAllLanguages() {
+		items = append(items, item{title, abbrev})
+	}
+	return items
 }
 
 func Run(c Config) {
@@ -224,6 +235,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// update language list
 		m.langList.SetWidth(msg.Width)
+		m.langList.SetHeight(msg.Height - verticalMargins)
 
 		// translation fetched
 	case gotTrans:
@@ -357,10 +369,6 @@ type item struct {
 func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.abbreviation }
 func (i item) FilterValue() string { return i.title }
-
-func NewListItem(title, abbreviation string) item {
-	return item{title, abbreviation}
-}
 
 func getKeyMapLangList() keyMapList {
 	return keyMapList{

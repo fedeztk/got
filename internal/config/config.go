@@ -2,10 +2,7 @@ package config
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/fedeztk/got/internal/model"
 	"github.com/spf13/viper"
 )
 
@@ -15,7 +12,6 @@ const (
 )
 
 type Config struct {
-	languages              []list.Item
 	sourceLang, targetLang string
 }
 
@@ -24,29 +20,15 @@ func NewConfig() *Config {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("$HOME/.config/got")
-	return &Config{
-		languages:  readLanguages(),
-		sourceLang: viper.GetString("source"),
-		targetLang: viper.GetString("target"),
-	}
-}
 
-func readLanguages() []list.Item {
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("%s\ngot needs a config file to work! Copy the sample in ~/.config/got/config.yml from %s", err, REPOCONFIG))
 	}
-
-	items := make([]list.Item, 0)
-
-	for _, line := range strings.Split(viper.GetString("languages"), "\n") {
-		if line[0] == '#' || len(line) == 0 {
-			continue
-		}
-		fields := strings.Split(line, "-")
-		items = append(items, model.NewListItem(strings.TrimSpace(fields[0]), strings.TrimSpace(fields[1])))
+	return &Config{
+		sourceLang: viper.GetString("source"),
+		targetLang: viper.GetString("target"),
 	}
-	return items
 }
 
 type write struct {
@@ -64,10 +46,6 @@ func writeConfig(w ...write) {
 	if modified {
 		viper.WriteConfig()
 	}
-}
-
-func (c *Config) Langs() []list.Item {
-	return c.languages
 }
 
 func (c *Config) Source() string {
