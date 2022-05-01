@@ -18,7 +18,9 @@ go-translation (shortly `got`), a simple translator build on top of [simplytrans
 
 ## Demo
 
-https://user-images.githubusercontent.com/58485208/165116687-95017b2b-1e1b-4c82-b5ac-dc2cda87afe0.mp4
+
+https://user-images.githubusercontent.com/58485208/166154625-7c5556bd-74aa-4425-a046-160ba793b792.mp4
+
 
 <a id="orgfa2aa9c"></a>
 
