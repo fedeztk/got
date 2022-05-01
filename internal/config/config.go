@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -18,12 +18,18 @@ type Config struct {
 func NewConfig() *Config {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath(".")
 	viper.AddConfigPath("$HOME/.config/got")
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("%s\ngot needs a config file to work! Copy the sample in ~/.config/got/config.yml from %s", err, REPOCONFIG))
+		// get home directory and create config file
+		home, _ := os.UserHomeDir()
+		os.MkdirAll(home+"/.config/got", os.ModePerm)
+		viper.SafeWriteConfig()
+		writeConfig(
+			write{"source", "en"},
+			write{"target", "it"},
+		)
 	}
 	return &Config{
 		sourceLang: viper.GetString("source"),
