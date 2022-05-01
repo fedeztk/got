@@ -3,60 +3,64 @@ package translator
 import (
 	"strings"
 
-	"github.com/charmbracelet/glamour"
+	// "github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
+)
+
+var (
+	indentOne   = lipgloss.NewStyle().Margin(0, 0, 0, 2)
+	indentTwo   = indentOne.Copy().Margin(0, 0, 0, 4)
+	indentThree = indentTwo.Copy().Margin(0, 0, 0, 6).Width(80)
+	title       = indentOne.Copy().Bold(true).Background(lipgloss.Color("12")).Padding(0, 1).Foreground(lipgloss.Color("0"))
+	titleSec    = indentTwo.Copy().Bold(true).Background(lipgloss.Color("13")).Padding(0, 1).Foreground(lipgloss.Color("0")).MarginBottom(1).MarginTop(1)
+	listItem    = indentTwo.Copy().Bold(true)
 )
 
 func (r Response) PrettyPrint() string {
-	markdown := strings.Builder{}
-	markdown.WriteString("# Translated text: **" + r.TranslatedText + "**\n\n")
-	markdown.WriteString("\n" + "---" + "\n")
+	builder := strings.Builder{}
+	builder.WriteString(title.Render("Translated text: "+r.TranslatedText) + "\n")
 	for category, defByCategory := range r.DefinitionsByCategory {
-		markdown.WriteString("## " + "Part of speech: *" + category + "*\n")
+		builder.WriteString(titleSec.Render("Part of speech: "+category) + "\n")
 		for _, def := range defByCategory {
 			if definition := def.Definition; definition != "" {
-				markdown.WriteString("> Definition:\n\t\t " + definition + "\n")
+				builder.WriteString(indentTwo.Render("Definition:"))
+				builder.WriteString("\n" + indentThree.Render("- "+definition) + "\n")
 			}
 			if dictionary := def.Dictionary; dictionary != "" {
-				markdown.WriteString("> Dictionary: \n\t\t" + dictionary + "\n")
+				builder.WriteString(indentTwo.Render("Dictionary:"))
+				builder.WriteString("\n" + indentThree.Render("- "+dictionary) + "\n")
 			}
 			if useInSentence := def.UseInSentence; useInSentence != "" {
-				markdown.WriteString("> Use in sentence: \n\t\t " + useInSentence + "\n")
+				builder.WriteString(indentTwo.Render("Use in sentence:"))
+				builder.WriteString("\n" + indentThree.Render("- "+useInSentence) + "\n")
 			}
 			for key, synonymsList := range def.Synonyms {
-				markdown.WriteString("> Synonyms: \n\t\t - ")
+				builder.WriteString(indentTwo.Render("Synonyms:"))
+				builder.WriteString("\n" + indentThree.Render("- "))
 				for _, synonym := range synonymsList[:len(synonymsList)-1] {
-					markdown.WriteString(synonym + ", ")
+					builder.WriteString(synonym + ", ")
 				}
-				markdown.WriteString(synonymsList[len(synonymsList)-1])
+				builder.WriteString(synonymsList[len(synonymsList)-1])
 				if key != "" {
-					markdown.WriteString(" (" + key + ")")
+					builder.WriteString(" (" + key + ")")
 				}
-				markdown.WriteString("\n")
+				builder.WriteString("\n")
 			}
 			if informal := def.Informal; informal != "" {
-				markdown.WriteString("> Informal: " + informal + "\n")
+				builder.WriteString(indentTwo.Render("Informal: "+informal) + "\n")
 			}
-			markdown.WriteString("\n\n")
+			builder.WriteString("\n")
 		}
-		markdown.WriteString("\n" + "---" + "\n")
 	}
 	for category, translationsByCategory := range r.SingleTranslation {
-		markdown.WriteString("## " + "Part of speech: *" + category + "*\n")
+		builder.WriteString(titleSec.Render("Part of speech: "+category) + "\n")
 		for singleWord, translations := range translationsByCategory {
-			markdown.WriteString("- **" + singleWord + "**: ")
+			builder.WriteString(listItem.Render("- "+singleWord) + ": ")
 			for _, word := range translations.Words[:len(translations.Words)-1] {
-				markdown.WriteString(word + ", ")
+				builder.WriteString(word + ", ")
 			}
-			markdown.WriteString(translations.Words[len(translations.Words)-1] + "\n")
+			builder.WriteString(translations.Words[len(translations.Words)-1] + "\n")
 		}
 	}
-	render, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(120),
-	)
-	pretty, err := render.Render(markdown.String())
-	if err != nil {
-		panic(err)
-	}
-	return pretty
+	return builder.String()
 }

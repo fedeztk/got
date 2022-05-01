@@ -303,6 +303,7 @@ func (m model) View() string {
 		content = m.langList.View()
 	}
 
+	// activeLanguages := promptStyleSelLang.Render(fmt.Sprintf("%s →  %s", m.source, m.target))
 	gap := tabGap.Render(strings.Repeat(" ", m.viewport.Width))
 	row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
 	doc.WriteString(row + "\n\n")
@@ -311,11 +312,11 @@ func (m model) View() string {
 
 func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
-		text, err := translator.Translate(query, m.source, m.target)
+		response, err := translator.Translate(query, m.source, m.target)
 		if err != nil {
 			return gotTrans{Err: err}
 		}
-		return gotTrans{result: text.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s", m.source, m.target))}
+		return gotTrans{result: response.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s", m.source, m.target))}
 	}
 }
 
