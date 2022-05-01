@@ -45,11 +45,14 @@ export PATH="$HOME/go/bin:$PATH"
 ```
 
 - Copy [the sample config](https://github.com/fedeztk/got/blob/master/config.yml) file under ~/.config/got/ as config.yml **or** let the program generate one for you at the first run
-- Run it:
+- Run it interactively:
 ```sh
 got
 ```
-
+-  Or in oneshot mode:
+```sh
+got -o -f en -t it "Hello World"
+```
 <a id="org26baa6c"></a>
 
 # Features
