@@ -2,14 +2,16 @@
 
 ## Table of Contents
 
-[Demo](#orgab62fc1)
-[Usage](#orgfa2aa9c)
-[Features](#org26baa6c)
+[Demo](#orgab62fc1) -
+[Usage](#orgfa2aa9c) -
+[Features](#org26baa6c) -
 [Testing](#org2744438)
 
-got(ranslation), a simple translator build on top of [translate-shell](https://github.com/soimort/translate-shell) and the awesome [bubbletea](https://github.com/charmbracelet/bubbletea) tui library.
+go-translation (shortly `got`), a simple translator build on top of [simplytranslate's APIs](https://codeberg.org/SimpleWeb/SimplyTranslate-Web/src/branch/master/api.md) and the awesome [bubbletea](https://github.com/charmbracelet/bubbletea) tui library.
 
 > Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected&#x2026;
+
+> The project is still a work-in-progress, breaking changes and heavy refactoring may happen
 
 
 <a id="orgab62fc1"></a>
@@ -22,30 +24,40 @@ https://user-images.githubusercontent.com/58485208/165116687-95017b2b-1e1b-4c82-
 
 # Usage
 
--   install dependencies:
+- Install `got`: 
 
-    	pacman -S go translate-shell
+With the `go` tool:
+```sh
+go install github.com/fedeztk/got/cmd/got
+```
+**Or** from source:
+```sh
+# clone the repo
+git clone https://github.com/fedeztk/got.git
+# install manually 
+make install
+```
+In both cases make sure that you have the go `bin` directory in your path:
+```sh
+export PATH="$HOME/go/bin:$PATH"
+```
 
--   install `got`:
-
-		go get -u https://github.com/fedeztk/got
-
--   copy [the sample config](https://github.com/fedeztk/got/blob/master/config.yml) file under ~/.config/got/ as config.yml
--   run it:
-
-    	got
-
+- Copy [the sample config](https://github.com/fedeztk/got/blob/master/config.yml) file under ~/.config/got/ as config.yml **or** let the program generate one for you at the first run
+- Run it:
+```sh
+got
+```
 
 <a id="org26baa6c"></a>
 
 # Features
 
--   interact with google translate through translate-shell easily via the terminal
--   clean interface with 3 tabs, switch between them with tab/shift-tab:
+-   Interact with google translate easily via the terminal, no need to open a browser!
+-   Clean interface with 3 tabs, switch between them with tab/shift-tab:
     -   **text input**: input the sentence you want to translate, press enter to translate
-    -   **language selection**: choose between 121 languages, select source language with **s**, target with **t**
+    -   **language selection**: choose between 108 languages, select source language with **s**, target with **t**. Press **h** to show the help menu
     -   **translation**: pager that shows the result of translation
--   quit anytime with esc or ctrl-c
+-   quit anytime with **esc** or **ctrl-c**
 -   automatically remembers the last languages used
 
 
@@ -55,7 +67,7 @@ https://user-images.githubusercontent.com/58485208/165116687-95017b2b-1e1b-4c82-
 
 Development is done through `docker`, build the container with:
 
-    docker build -t got .
+    make docker-build
 
 Check that the build went fine:
 
@@ -63,5 +75,5 @@ Check that the build went fine:
 
 Test it with:
 
-    docker run -it -e "TERM=xterm-256color" got
+    make docker-run
 
