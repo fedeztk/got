@@ -286,7 +286,7 @@ func (m model) View() string {
 			tab.Render("Translation"),
 		)
 		content = promptStyleUpperText.Render("Enter sentence") +
-			promptStyleSelLang.Render(fmt.Sprintf("Translating %s →  %s", m.source, m.target)) +
+			promptStyleSelLang.Render(fmt.Sprintf("Translating %s →  %s (%s engine)", m.source, m.target, conf.Engine())) +
 			fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
 	case LOADING:
 		row = lipgloss.JoinHorizontal(
@@ -327,7 +327,7 @@ func (m model) fetchTranslation(query string) tea.Cmd {
 		if err != nil {
 			return gotTrans{Err: err}
 		}
-		return gotTrans{result: response.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s", m.source, m.target))}
+		return gotTrans{result: response.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s (%s engine)", m.source, m.target, conf.Engine()))}
 	}
 }
 
