@@ -24,17 +24,22 @@ func main() {
 	oneShot := flag.Bool(
 		"o",
 		false,
-		"one shot",
+		"one shot mode, requires -f and -t",
 	)
 	from := flag.String(
 		"f",
 		"",
-		"from",
+		"language to translate from",
 	)
 	to := flag.String(
 		"t",
 		"",
-		"to",
+		"language to translate to",
+	)
+	engine := flag.String(
+		"e",
+		"",
+		"engine, could be: google (default), iciba, reverso, libre\nDeepl is not supported yet and defaults to google",
 	)
 	flag.Parse()
 
@@ -47,7 +52,11 @@ func main() {
 			fmt.Println("from and to are required in one shot mode")
 			os.Exit(1)
 		}
-		response, err := translator.Translate(strings.Join(flag.Args(), " "), *from, *to)
+		if *engine == "" {
+			*engine = "google"
+		}
+		fmt.Println(*engine)
+		response, err := translator.Translate(strings.Join(flag.Args(), " "), *from, *to, *engine)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -55,7 +64,11 @@ func main() {
 		fmt.Println(response.PrettyPrint())
 
 	default:
-		model.Run(config.NewConfig())
+		conf := config.NewConfig()
+		if *engine != "" {
+			conf.SetEngine(*engine)
+		}
+		model.Run(conf)
 	}
 
 	os.Exit(0)

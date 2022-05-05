@@ -107,10 +107,10 @@ type keyMapList struct {
 }
 
 type Config interface {
-	// Langs() []list.Item
 	Source() string
 	Target() string
-	RememberLastLangs(source, target string)
+	Engine() string
+	RememberLastSettings(source, target string)
 }
 
 var conf Config
@@ -127,7 +127,6 @@ func newModel() *model {
 	s.Style = spinnerStyle
 
 	keys := getKeyMapLangList()
-	// confLangs := conf.Langs()
 	l := list.New(getConfLangs(), list.NewDefaultDelegate(), defaultListWidth, defaultListHeight)
 	l.Title = "Available languages"
 	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey} }
@@ -200,7 +199,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 		case "ctrl+c", "esc":
-			conf.RememberLastLangs(m.source, m.target)
+			conf.RememberLastSettings(m.source, m.target)
 			return m, tea.Quit
 
 		case "tab":
@@ -324,7 +323,7 @@ func (m model) View() string {
 
 func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
-		response, err := translator.Translate(query, m.source, m.target)
+		response, err := translator.Translate(query, m.source, m.target, conf.Engine())
 		if err != nil {
 			return gotTrans{Err: err}
 		}
