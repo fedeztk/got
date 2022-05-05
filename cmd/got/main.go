@@ -55,7 +55,6 @@ func main() {
 		if *engine == "" {
 			*engine = "google"
 		}
-		fmt.Println(*engine)
 		response, err := translator.Translate(strings.Join(flag.Args(), " "), *from, *to, *engine)
 		if err != nil {
 			fmt.Println(err)
