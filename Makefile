@@ -1,5 +1,5 @@
 all:
-	go build -o got cmd/got/main.go
+	go build -ldflags "-X main.gotVersion=0.1" -o got cmd/got/main.go
 
 run:
 	go run cmd/got/main.go
@@ -16,7 +16,7 @@ docker-run:
 	docker run -it -e "TERM=xterm-256color" got
 
 install:
-	go build -o got cmd/got/main.go
+	go build -ldflags "-X main.gotVersion=0.1" -o got cmd/got/main.go
 	mv -f got `go env GOPATH`/bin/
 
 uninstall:

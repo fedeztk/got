@@ -29,14 +29,16 @@ func GetAllLanguages() map[string]string {
 	return languageMap
 }
 
-func Translate(text, source, target string) (Response, error) {
+func Translate(text, source, target, engine string) (Response, error) {
 	r := Response{}
 	t := struct {
 		client    http.Client
 		languages map[string]string
+		engines   []string
 	}{
 		client:    http.Client{},
 		languages: languageMap,
+		engines:   []string{"google", "deepl", "libre", "iciba", "reverso"},
 	}
 
 	if text == "" {
@@ -56,8 +58,19 @@ func Translate(text, source, target string) (Response, error) {
 		return r, errors.New("target language not supported")
 	}
 
+	checkEngine := func(engine string) bool {
+		for _, e := range t.engines {
+			if e == engine {
+				return true
+			}
+		}
+		return false
+	}
+	if !checkEngine(engine) {
+		return r, errors.New("engine not supported, please use one of the following: " + strings.Join(t.engines, ", "))
+	}
+
 	const translateURL = "https://simplytranslate.org/api/translate/?engine="
-	const engine = "google"
 	req, err := http.NewRequest("GET", translateURL+engine, nil)
 	if err != nil {
 		return r, err

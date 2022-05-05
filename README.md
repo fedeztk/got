@@ -30,7 +30,7 @@ https://user-images.githubusercontent.com/58485208/166154625-7c5556bd-74aa-4425-
 
 With the `go` tool:
 ```sh
-go install github.com/fedeztk/got/cmd/got
+go install github.com/fedeztk/got/cmd/got@latest
 ```
 **Or** from source:
 ```sh
@@ -47,21 +47,25 @@ export PATH="$HOME/go/bin:$PATH"
 - Copy [the sample config](https://github.com/fedeztk/got/blob/master/config.yml) file under ~/.config/got/ as config.yml **or** let the program generate one for you at the first run
 - Run it interactively:
 ```sh
-got
+got            # use last used engine, default is google
+got -e reverso # change engine to reverso
 ```
 -  Or in oneshot mode:
 ```sh
-got -o -f en -t it "Hello World"
+got -o -f en -t it "Hello World"          # use default (google)
+got -o -e libre -f en -t it "Hello World" # use libre-translate
 ```
+For more information check the help (`got -h`)
 <a id="org26baa6c"></a>
 
 # Features
 
--   Interact with google translate easily via the terminal, no need to open a browser!
+-   Interact with various translation engines easily via the terminal, no need to open a browser!
 -   Clean interface with 3 tabs, switch between them with tab/shift-tab:
-    -   **text input**: input the sentence you want to translate, press enter to translate
-    -   **language selection**: choose between 108 languages, select source language with **s**, target with **t**. Press **h** to show the help menu
-    -   **translation**: pager that shows the result of translation
+	-   **text input**: input the sentence you want to translate, press enter to translate
+	-   **language selection**: choose between 108 languages, select source language with **s**, target with **t**. Press **h** to show the help menu
+	-   **translation**: pager that shows the result of translation
+- **engines**: choose between google, libre-translate, reverso and iciba (deepl is not working yet)
 -   quit anytime with **esc** or **ctrl-c**
 -   automatically remembers the last languages used
 

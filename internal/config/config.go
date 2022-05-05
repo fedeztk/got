@@ -6,13 +6,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	REPO       = "https://github.com/fedeztk/got"
-	REPOCONFIG = "https://github.com/fedeztk/got/blob/master/config.yml"
-)
-
 type Config struct {
-	sourceLang, targetLang string
+	sourceLang, targetLang, engine string
 }
 
 func NewConfig() *Config {
@@ -22,18 +17,12 @@ func NewConfig() *Config {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		// get home directory and create config file
-		home, _ := os.UserHomeDir()
-		os.MkdirAll(home+"/.config/got", os.ModePerm)
-		viper.SafeWriteConfig()
-		writeConfig(
-			write{"source", "en"},
-			write{"target", "it"},
-		)
+		writeDefaultConfig()
 	}
 	return &Config{
 		sourceLang: viper.GetString("source"),
 		targetLang: viper.GetString("target"),
+		engine:     viper.GetString("engine"),
 	}
 }
 
@@ -62,9 +51,29 @@ func (c *Config) Target() string {
 	return c.targetLang
 }
 
-func (c *Config) RememberLastLangs(source, target string) {
+func (c *Config) Engine() string {
+	return c.engine
+}
+
+func (c *Config) SetEngine(engine string) {
+	c.engine = engine
+}
+
+func (c *Config) RememberLastSettings(source, target string) {
 	writeConfig(
 		write{"source", source},
 		write{"target", target},
+		write{"engine", c.engine},
+	)
+}
+
+func writeDefaultConfig() {
+	home, _ := os.UserHomeDir()
+	os.MkdirAll(home+"/.config/got", os.ModePerm)
+	viper.SafeWriteConfig()
+	writeConfig(
+		write{"source", "en"},
+		write{"target", "it"},
+		write{"engine", "google"},
 	)
 }
