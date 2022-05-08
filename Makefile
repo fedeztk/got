@@ -10,7 +10,7 @@ clean:
 	fi
 
 docker-build:
-	docker build -t got deploy
+	docker build -t got .
 
 docker-run:
 	docker run -it -e "TERM=xterm-256color" got
