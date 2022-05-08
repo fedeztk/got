@@ -1,4 +1,4 @@
-# got [![Go](https://github.com/fedeztk/got/actions/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml)
+# got [![Go](https://github.com/fedeztk/got/actions/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml)[![Go](https://github.com/fedeztk/got/actions/workflows/deploy.yaml/badge.svg)](https://github.com/fedeztk/got/tree/release/.github/workflows/deploy.yml)
 
 ## Table of Contents
 
@@ -85,4 +85,6 @@ Check that the build went fine:
 Test it with:
 
     make docker-run
+
+Pre-built Docker image available [here](https://github.com/fedeztk/got/pkgs/container/got)
 
