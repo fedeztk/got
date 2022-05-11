@@ -88,6 +88,10 @@ func Translate(text, source, target, engine string) (Response, error) {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode != 200 {
+		return r, errors.New("Unable to translate! Status code received from server: " + res.Status)
+	}
+
 	err = json.NewDecoder(res.Body).Decode(&r)
 	if err != nil {
 		return r, err
