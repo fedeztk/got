@@ -44,6 +44,8 @@ var (
 	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
 	helpStyle          = list.DefaultStyles().HelpStyle.PaddingLeft(4)
 	statusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).MarginLeft(2).Bold(true)
+	// errors
+	ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
 	// tabs
 	docStyle        = lipgloss.NewStyle().Align(lipgloss.Center)
 	activeTabBorder = lipgloss.Border{
@@ -239,11 +241,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// translation fetched
 	case gotTrans:
 		m.state = TRANSLATING
-		if err := msg.Err; err == nil {
-			m.err = err
-			m.result = msg.result
-			m.viewport.SetContent(m.result)
-		}
+		m.err = msg.Err
+		m.result = msg.result
+		m.viewport.SetContent(m.result)
 	}
 
 	switch m.state {
@@ -264,10 +264,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	if m.err != nil {
-		return fmt.Sprintf("Could not fetch sentence: %v", m.err)
-	}
-
 	// wait for terminal size info
 	if !m.termInfoReady {
 		return "Initializing..."
@@ -303,7 +299,11 @@ func (m model) View() string {
 			tab.Render("Language selection"),
 			activeTab.Render("Translation"),
 		)
-		content = m.formatTranslation()
+		if m.err != nil {
+			content = ErrorStyle.Render(m.err.Error())
+		} else {
+			content = m.formatTranslation()
+		}
 	case CHOOSING:
 		row = lipgloss.JoinHorizontal(
 			lipgloss.Top,
@@ -325,7 +325,7 @@ func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
 		response, err := translator.Translate(query, m.source, m.target, conf.Engine())
 		if err != nil {
-			return gotTrans{Err: err}
+			return gotTrans{Err: err, result: err.Error()}
 		}
 		return gotTrans{result: response.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s (%s engine)", m.source, m.target, conf.Engine()))}
 	}

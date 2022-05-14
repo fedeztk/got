@@ -57,7 +57,7 @@ func main() {
 		}
 		response, err := translator.Translate(strings.Join(flag.Args(), " "), *from, *to, *engine)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(model.ErrorStyle.Render(err.Error()))
 			os.Exit(1)
 		}
 		fmt.Println(response.PrettyPrint())
