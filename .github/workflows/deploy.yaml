@@ -1,4 +1,4 @@
-name: Release to ghcr.io and AUR
+name: Deploy docker image
 
 on:
   push:
@@ -40,19 +40,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Create AUR PKGBUILD
-        run: |
-          mkdir aur-package && cd aur-package
-          cp ../template/archlinux/PKGBUILD .
-          sed -i "s|__VERSION__|${{ steps.meta.outputs.labels.org.opencontainers.image.version }}|g" PKGBUILD
-
-      - name: Publish to the AUR
-        uses: KSXGitHub/github-actions-deploy-aur@v2.2.5
-        with:
-          pkgname: go-translation-git
-          pkgbuild: ./aur-package/PKGBUILD
-          commit_username: ${{ secrets.AUR_USERNAME }}
-          commit_email: ${{ secrets.AUR_EMAIL }}
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: "Version ${{ steps.meta.outputs.tags }}"
