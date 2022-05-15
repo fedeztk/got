@@ -1,8 +1,9 @@
-name: Deploy image to ghcr.io
+name: Deploy docker image
 
 on:
   push:
-    branches: ["release"]
+    tags:
+      - "*"
 
 env:
   REGISTRY: ghcr.io

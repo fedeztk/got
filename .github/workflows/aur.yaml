@@ -1,0 +1,35 @@
+name: Publish package to AUR
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  publish-to-aur:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+        with:
+          strip_v: true
+
+      - name: Create AUR PKGBUILD
+        run: |
+          mkdir aur-package && cd aur-package
+          cp ../template/archlinux/PKGBUILD .
+          sed -i "s|__VERSION__|${{ steps.tag.outputs.tag }}|g" PKGBUILD
+
+      - name: Publish to the AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v2.2.5
+        with:
+          pkgname: go-translation-git
+          pkgbuild: ./aur-package/PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Version ${{ steps.tag.outputs.tag }}"
