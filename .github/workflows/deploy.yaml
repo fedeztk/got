@@ -45,7 +45,7 @@ jobs:
         run: |
           mkdir aur-package && cd aur-package
           cp ../template/archlinux/PKGBUILD .
-          sed -i -e "s/__VERSION__/${{ steps.meta.outputs.tags }}/g" PKGBUILD
+          sed -i -e "s|__VERSION__|${{ steps.meta.outputs.tags }}|g" PKGBUILD
 
       - name: Publish to the AUR
         uses: KSXGitHub/github-actions-deploy-aur@v2.2.5
