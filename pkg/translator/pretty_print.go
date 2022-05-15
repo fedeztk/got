@@ -3,7 +3,6 @@ package translator
 import (
 	"strings"
 
-	// "github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -20,7 +19,8 @@ func (r Response) PrettyPrint() string {
 	builder := strings.Builder{}
 	builder.WriteString(title.Render("Translated text: "+r.TranslatedText) + "\n")
 	for category, defByCategory := range r.DefinitionsByCategory {
-		builder.WriteString(titleSec.Render("Part of speech: "+category) + "\n")
+		builder.WriteString(titleSec.Render("Part of speech: "+
+			getPartOfSpeechOrUndefined(category)) + "\n")
 		for _, def := range defByCategory {
 			if definition := def.Definition; definition != "" {
 				builder.WriteString(indentTwo.Render("Definition:"))
@@ -53,7 +53,8 @@ func (r Response) PrettyPrint() string {
 		}
 	}
 	for category, translationsByCategory := range r.SingleTranslation {
-		builder.WriteString(titleSec.Render("Part of speech: "+category) + "\n")
+		builder.WriteString(titleSec.Render("Part of speech: "+
+			getPartOfSpeechOrUndefined(category)) + "\n")
 		for singleWord, translations := range translationsByCategory {
 			builder.WriteString(listItem.Render("- "+singleWord) + ": ")
 			for _, word := range translations.Words[:len(translations.Words)-1] {
@@ -63,4 +64,11 @@ func (r Response) PrettyPrint() string {
 		}
 	}
 	return builder.String()
+}
+
+func getPartOfSpeechOrUndefined(s string) string {
+	if s == "" || s == "null" {
+		return "undefined"
+	}
+	return s
 }
