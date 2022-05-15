@@ -2,9 +2,9 @@ name: Go CI
 
 on:
   push:
-    branches: [ master, rewrite ]
+    branches: ['*']
   pull_request:
-    branches: [ master, rewrite ]
+    branches: ['*']
 
 jobs:
   build:
