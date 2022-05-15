@@ -1,4 +1,5 @@
-# got [![Go](https://github.com/fedeztk/got/actions/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml)[![Go](https://github.com/fedeztk/got/actions/workflows/deploy.yaml/badge.svg)](https://github.com/fedeztk/got/tree/release/.github/workflows/deploy.yml)
+# got
+[![GO](https://github.com/fedeztk/got/actions/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml) [![GHCR](https://github.com/fedeztk/got/actions/workflows/deploy.yaml/badge.svg)](https://github.com/fedeztk/got/tree/release/.github/workflows/deploy.yml) [![AUR](https://img.shields.io/aur/version/go-translation-git)](https://aur.archlinux.org/packages/go-translation-git)
 
 ## Table of Contents
 
@@ -43,7 +44,10 @@ In both cases make sure that you have the go `bin` directory in your path:
 ```sh
 export PATH="$HOME/go/bin:$PATH"
 ```
-
+If you are an Arch user there is also an AUR package available:
+```sh
+paru -S go-translation-git
+```
 - Copy [the sample config](https://github.com/fedeztk/got/blob/master/config.yml) file under ~/.config/got/ as config.yml **or** let the program generate one for you at the first run
 - Run it interactively:
 ```sh
