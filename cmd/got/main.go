@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
 	"fmt"
 	"os"
@@ -11,9 +12,9 @@ import (
 	"github.com/fedeztk/got/pkg/translator"
 )
 
-var (
-	gotVersion string
-)
+//go:generate ./get_version.sh
+//go:embed .version
+var gotVersion string
 
 func main() {
 	showVersion := flag.Bool(

@@ -1,0 +1,32 @@
+name: Update package version
+
+on:
+  push:
+    branches: ['*']
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Generate version
+        run: go generate ./...
+
+      - name: Update AUR PKGBUILD
+        run: |
+          version=$(cat ./cmd/got/.version)
+          sed -i "s|^pkgver=.*|pkgver=$version|" ./template/archlinux/PKGBUILD
+
+      - name: Commit and push changes
+        uses: devops-infra/action-commit-push@v0.9.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          amend: true
+          no_edit: true
