@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -30,3 +32,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           amend: true
           no_edit: true
+          force: true
