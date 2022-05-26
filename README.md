@@ -1,5 +1,5 @@
 # got
-[![GO](https://github.com/fedeztk/got/actions/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml) [![GHCR](https://github.com/fedeztk/got/actions/workflows/deploy.yaml/badge.svg)](https://github.com/fedeztk/got/tree/release/.github/workflows/deploy.yml) [![AUR](https://img.shields.io/aur/version/go-translation-git?logo=archlinux)](https://aur.archlinux.org/packages/go-translation-git)
+[![GO](https://github.com/fedeztk/got/actions/workflows/go.yaml/badge.svg)](https://github.com/fedeztk/got/tree/master/.github/workflows/go.yml) [![GHCR](https://github.com/fedeztk/got/actions/workflows/deploy.yaml/badge.svg)](https://github.com/fedeztk/got/tree/release/.github/workflows/deploy.yml) [![AUR](https://img.shields.io/aur/version/go-translation-git?logo=archlinux)](https://aur.archlinux.org/packages/go-translation-git) [![Go Report Card](https://goreportcard.com/badge/github.com/fedeztk/got)](https://goreportcard.com/report/github.com/fedeztk/got)
 
 ## Table of Contents
 
