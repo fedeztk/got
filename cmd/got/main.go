@@ -25,14 +25,14 @@ func main() {
 	oneShot := flag.Bool(
 		"o",
 		false,
-		"one shot mode, requires -f and -t",
+		"one shot mode, requires -s and -t",
 	)
-	from := flag.String(
-		"f",
+	source := flag.String(
+		"s",
 		"",
 		"language to translate from",
 	)
-	to := flag.String(
+	target := flag.String(
 		"t",
 		"",
 		"language to translate to",
@@ -49,14 +49,14 @@ func main() {
 		fmt.Println(gotVersion)
 
 	case *oneShot:
-		if *from == "" || *to == "" {
-			fmt.Println("from and to are required in one shot mode")
+		if *source == "" || *target == "" {
+			fmt.Println("source and target are required in one shot mode")
 			os.Exit(1)
 		}
 		if *engine == "" {
 			*engine = "google"
 		}
-		response, err := translator.Translate(strings.Join(flag.Args(), " "), *from, *to, *engine)
+		response, err := translator.Translate(strings.Join(flag.Args(), " "), *source, *target, *engine)
 		if err != nil {
 			fmt.Println(model.ErrorStyle.Render(err.Error()))
 			os.Exit(1)
