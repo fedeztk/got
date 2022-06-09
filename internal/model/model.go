@@ -105,7 +105,7 @@ type gotTrans struct {
 }
 
 type keyMapList struct {
-	sourceLangKey, targetLangKey key.Binding
+	sourceLangKey, targetLangKey, invertLangKey key.Binding
 }
 
 type Config interface {
@@ -131,7 +131,7 @@ func newModel() *model {
 	keys := getKeyMapLangList()
 	l := list.New(getConfLangs(), list.NewDefaultDelegate(), defaultListWidth, defaultListHeight)
 	l.Title = "Available languages"
-	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey} }
+	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey, keys.invertLangKey} }
 	// l.Help.ShowAll = true
 	l.Styles.Title = titleStyle
 	l.Styles.PaginationStyle = paginationStyle
@@ -195,6 +195,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
 				m.target = abbreviation
 				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Target language: " + title))
+				cmds = append(cmds, statusCmd)
+			case key.Matches(msg, m.langListKeys.invertLangKey):
+				m.source, m.target = m.target, m.source
+				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Inverted languages: " + m.source + " → " + m.target))
 				cmds = append(cmds, statusCmd)
 			}
 		}
@@ -282,7 +286,6 @@ func (m model) View() string {
 			tab.Render("Translation"),
 		)
 		content = promptStyleUpperText.Render("Enter sentence") +
-			promptStyleSelLang.Render(fmt.Sprintf("Translating %s →  %s (%s engine)", m.source, m.target, conf.Engine())) +
 			fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
 	case LOADING:
 		row = lipgloss.JoinHorizontal(
@@ -314,8 +317,10 @@ func (m model) View() string {
 		content = m.langList.View()
 	}
 
-	// activeLanguages := promptStyleSelLang.Render(fmt.Sprintf("%s →  %s", m.source, m.target))
-	gap := tabGap.Render(strings.Repeat(" ", m.viewport.Width))
+	translationStatus := promptStyleSelLang.Render(fmt.Sprintf("%s → %s (%s engine)", m.source, m.target, conf.Engine()))
+	lenTabs := lipgloss.Width(translationStatus) + lipgloss.Width(row) + 2 // still don't know why 2 cells are missing
+
+	gap := tabGap.Render(strings.Repeat(" ", m.viewport.Width-lenTabs) + translationStatus)
 	row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
 	doc.WriteString(row + "\n\n")
 	return docStyle.Render(doc.String()) + "\n" + content
@@ -327,7 +332,7 @@ func (m model) fetchTranslation(query string) tea.Cmd {
 		if err != nil {
 			return gotTrans{Err: err, result: err.Error()}
 		}
-		return gotTrans{result: response.PrettyPrint() + "\n" + promptStyleSelLang.Render(fmt.Sprintf("%s →  %s (%s engine)", m.source, m.target, conf.Engine()))}
+		return gotTrans{result: response.PrettyPrint()}
 	}
 }
 
@@ -378,6 +383,10 @@ func getKeyMapLangList() keyMapList {
 		targetLangKey: key.NewBinding(
 			key.WithKeys("t"),
 			key.WithHelp("t", "choose target language"),
+		),
+		invertLangKey: key.NewBinding(
+			key.WithKeys("i"),
+			key.WithHelp("i", "invert languages"),
 		),
 	}
 }
