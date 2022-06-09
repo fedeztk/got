@@ -56,8 +56,8 @@ got -e reverso # change engine to reverso
 ```
 -  Or in oneshot mode:
 ```sh
-got -o -f en -t it "Hello World"          # use default (google)
-got -o -e libre -f en -t it "Hello World" # use libre-translate
+got -o -s en -t it "Hello World"          # use default (google)
+got -o -e libre -s en -t it "Hello World" # use libre-translate
 ```
 For more information check the help (`got -h`)
 <a id="org26baa6c"></a>
