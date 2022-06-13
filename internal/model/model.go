@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -25,72 +24,16 @@ const (
 	// pager
 	headerHeight = 6 // 3 + 3 tabs and gaps
 	footerHeight = 3
-	// list
-	defaultListHeight = 34
-	defaultListWidth  = 14
-)
-
-var (
-	states = []int{TYPING, CHOOSING, TRANSLATING, LOADING}
-	// prompt
-	promptStyleIndicator = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-	placeholderStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("0"))
-	promptStyleSelLang   = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
-	// spinner
-	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
-	// list
-	titleStyle         = lipgloss.NewStyle().Background(lipgloss.Color("11")).Bold(true).Padding(0, 1).Foreground(lipgloss.Color("0"))
-	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle          = list.DefaultStyles().HelpStyle.PaddingLeft(4)
-	statusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).MarginLeft(2).Bold(true)
-	// errors
-	ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
-	// tabs
-	activeTabBorder = lipgloss.Border{
-		Top:         "─",
-		Bottom:      " ",
-		Left:        "│",
-		Right:       "│",
-		TopLeft:     "╭",
-		TopRight:    "╮",
-		BottomLeft:  "┘",
-		BottomRight: "└",
-	}
-	tabBorder = lipgloss.Border{
-		Top:         "─",
-		Bottom:      "─",
-		Left:        "│",
-		Right:       "│",
-		TopLeft:     "╭",
-		TopRight:    "╮",
-		BottomLeft:  "┴",
-		BottomRight: "┴",
-	}
-	highlight = lipgloss.Color("4")
-	tab       = lipgloss.NewStyle().
-			Border(tabBorder, true).
-			BorderForeground(highlight).
-			Padding(0, 2)
-	activeTab = tab.Copy().Border(activeTabBorder, true).Bold(true)
-	tabGap    = tab.Copy().
-			BorderTop(false).
-			BorderLeft(false).
-			BorderRight(false)
-	// pager
-	footerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
-	footerTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("7"))
 )
 
 type model struct {
-	textInput    textinput.Model
-	spinner      spinner.Model
-	viewport     viewport.Model
-	langList     list.Model
-	langListKeys keyMapList
-
+	textInput textinput.Model
+	spinner   spinner.Model
+	viewport  viewport.Model
+	langList  list.Model
 	help      help.Model
-	genKeyMap genKeyMap
+
+	keyMgr keyBindingMgr
 
 	result string
 	source string
@@ -99,15 +42,12 @@ type model struct {
 	termInfoReady bool
 	state         int
 	err           error
+	conf          Config
 }
 
 type gotTrans struct {
 	Err    error
 	result string
-}
-
-type keyMapList struct {
-	sourceLangKey, targetLangKey, invertLangKey key.Binding
 }
 
 type Config interface {
@@ -117,9 +57,7 @@ type Config interface {
 	RememberLastSettings(source, target string)
 }
 
-var conf Config
-
-func newModel() *model {
+func newModel(c Config) *model {
 	t := textinput.NewModel()
 	t.Placeholder = "your text here"
 	t.PlaceholderStyle = placeholderStyle
@@ -130,40 +68,28 @@ func newModel() *model {
 	s.Spinner = spinner.Dot
 	s.Style = spinnerStyle
 
-	keys := getKeyMapLangList()
-	l := list.New(getConfLangs(), list.NewDefaultDelegate(), defaultListWidth, defaultListHeight)
+	l := list.New(getConfLangs(), list.NewDefaultDelegate(), 0, 0)
 	l.DisableQuitKeybindings()
+	l.SetShowHelp(false)
 	l.Title = "Available languages"
-	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey, keys.invertLangKey} }
+	l.AdditionalFullHelpKeys = getListAdditionalKeyMap
 	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
 
 	return &model{
-		langList:     l,
-		textInput:    t,
-		spinner:      s,
-		langListKeys: keys,
-		state:        TYPING,
-		source:       conf.Source(),
-		target:       conf.Target(),
-		help:         help.New(),
-		genKeyMap:    getGenKeyMap(),
+		langList:  l,
+		textInput: t,
+		spinner:   s,
+		state:     TYPING,
+		source:    c.Source(),
+		target:    c.Target(),
+		help:      help.New(),
+		conf:      c,
+		keyMgr:    newKeyBindingMgr(l.FullHelp()),
 	}
-}
-
-func getConfLangs() []list.Item {
-	items := make([]list.Item, 0)
-
-	for abbrev, title := range translator.GetAllLanguages() {
-		items = append(items, item{title, abbrev})
-	}
-	return items
 }
 
 func Run(c Config) {
-	conf = c
-	initialModel := newModel()
+	initialModel := newModel(c)
 
 	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if err := p.Start(); err != nil {
@@ -188,49 +114,62 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 
-		// global keys
-		switch {
-		case key.Matches(msg, m.genKeyMap.exitKey):
-			conf.RememberLastSettings(m.source, m.target)
-			return m, tea.Quit
-
-		case key.Matches(msg, m.genKeyMap.nextTab):
+		// global keybindings
+		switch msg.String() {
+		case "tab":
 			m.switchTab(+1)
 
-		case key.Matches(msg, m.genKeyMap.prevTab):
+		case "shift+tab":
 			m.switchTab(-1)
+
+		case "ctrl+c", "esc":
+			m.conf.RememberLastSettings(m.source, m.target)
+			return m, tea.Quit
 		}
 
-		// keys for langauge list view
+		// language list keybindings
 		if m.state == CHOOSING {
-			switch {
-			case key.Matches(msg, m.langListKeys.sourceLangKey):
+			switch msg.String() {
+			case "s":
 				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
 				m.source = abbreviation
 				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Source language: " + title))
 				cmds = append(cmds, statusCmd)
-			case key.Matches(msg, m.langListKeys.targetLangKey):
+
+			case "t":
 				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
 				m.target = abbreviation
 				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Target language: " + title))
 				cmds = append(cmds, statusCmd)
-			case key.Matches(msg, m.langListKeys.invertLangKey):
+
+			case "i":
 				m.source, m.target = m.target, m.source
 				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Inverted languages: " + m.source + " → " + m.target))
 				cmds = append(cmds, statusCmd)
+
+			case "?":
+				m.help.ShowAll = !m.help.ShowAll
 			}
 		}
 
-		// keys for text input view (does not have dedicated keys struct, hence the switch on .String())
-		switch msg.String() {
-		case "enter":
-			if m.state == TYPING {
+		// text input keybindings
+		if m.state == TYPING {
+			switch msg.String() {
+			case "enter":
 				query := strings.TrimSpace(m.textInput.Value())
 				if query != "" {
-					m.state = LOADING
+					m.setState(LOADING)
 					cmds = append(cmds, spinner.Tick)
 					cmds = append(cmds, m.fetchTranslation(query))
 				}
+			}
+		}
+
+		// translating keybindings
+		if m.state == TRANSLATING {
+			switch msg.String() {
+			case "y":
+				m.yankTranslated()
 			}
 		}
 
@@ -255,7 +194,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// translation fetched
 	case gotTrans:
-		m.state = TRANSLATING
+		m.setState(TRANSLATING)
 		m.err = msg.Err
 		m.result = msg.result
 		m.viewport.SetContent(m.result)
@@ -289,47 +228,25 @@ func (m model) View() string {
 	// content renders the content based on the current tab
 	var tabsRow, content string
 
+	tabsRow = lipgloss.JoinHorizontal(lipgloss.Top, m.renderTabs()...)
+
 	switch m.state {
 	case TYPING:
-		tabsRow = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			activeTab.Render("Text input"),
-			tab.Render("Language selection"),
-			tab.Render("Translation"),
-		)
 		content = promptStyleUpperText.Render("Enter sentence") + "\n\n" + m.textInput.View()
 	case LOADING:
-		tabsRow = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			activeTab.Render("Text input"),
-			tab.Render("Language selection"),
-			tab.Render("Translation"),
-		)
 		content = fmt.Sprintf("%s fetching results... please wait.", m.spinner.View())
 	case TRANSLATING:
-		tabsRow = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			tab.Render("Text input"),
-			tab.Render("Language selection"),
-			activeTab.Render("Translation"),
-		)
 		if m.err != nil {
 			content = ErrorStyle.Render(m.err.Error())
 		} else {
 			content = m.viewport.View()
 		}
 	case CHOOSING:
-		tabsRow = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			tab.Render("Text input"),
-			activeTab.Render("Language selection"),
-			tab.Render("Translation"),
-		)
 		content = m.langList.View()
 	}
 
 	// holds top right translation info
-	translationStatus := promptStyleSelLang.Render(fmt.Sprintf("%s → %s (%s engine)", m.source, m.target, conf.Engine()))
+	translationStatus := promptStyleSelLang.Render(fmt.Sprintf("%s → %s (%s engine)", m.source, m.target, m.conf.Engine()))
 
 	lenTabs := lipgloss.Width(translationStatus) + lipgloss.Width(tabsRow) + 2 // still don't know why 2 cells are missing
 
@@ -342,12 +259,12 @@ func (m model) View() string {
 		(m.viewport.Height+headerHeight+footerHeight)- // total height of terminal as originally received
 			lipgloss.Height(view), // height of already utilized space
 		lipgloss.Bottom,
-		m.getFooter())
+		m.renderFooter())
 }
 
 func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
-		response, err := translator.Translate(query, m.source, m.target, conf.Engine())
+		response, err := translator.Translate(query, m.source, m.target, m.conf.Engine())
 		if err != nil {
 			return gotTrans{Err: err, result: err.Error()}
 		}
@@ -355,24 +272,37 @@ func (m model) fetchTranslation(query string) tea.Cmd {
 	}
 }
 
+func (m *model) setState(state int) {
+	m.state = state
+	m.keyMgr.state = state
+}
+
 func (m *model) switchTab(direction int) {
-	newState := (m.state + direction) % len(states)
-	if newState == LOADING {
-		newState = states[0]
+	states := []int{TYPING, CHOOSING, TRANSLATING}
+
+	var newState int
+	if direction > 0 {
+		newState = states[(m.state+1)%len(states)]
+	} else {
+		newState = states[(m.state-1+len(states))%len(states)]
 	}
-	if newState < 0 {
-		newState = TRANSLATING
-	}
+
 	if newState == TYPING {
 		m.textInput.Focus()
 	} else {
 		m.textInput.Blur()
 	}
-	m.state = newState
+	if newState != CHOOSING {
+		m.help.ShowAll = false
+	}
+
+	m.setState(newState)
 }
 
-func (m model) getFooter() string {
-	helpMenu := m.help.View(m.genKeyMap)
+func (m *model) yankTranslated() {}
+
+func (m *model) renderFooter() string {
+	helpMenu := m.help.View(m.keyMgr)
 	helpLen := lipgloss.Width(helpMenu)
 	footerTop, footerMid, footerBot := "", "", ""
 	gapSize := m.viewport.Width
@@ -394,6 +324,26 @@ func (m model) getFooter() string {
 	return footerStyle.Render(footer)
 }
 
+func (m *model) renderTabs() []string {
+	stateMaps := []string{
+		TYPING:      "Text input",
+		CHOOSING:    "Language selection",
+		TRANSLATING: "Translation",
+	}
+	checkActive := func(i int, title string) string {
+		if i == m.state {
+			return activeTab.Render(title)
+		}
+		return tab.Render(title)
+	}
+
+	s := []string{}
+	for state, tab := range stateMaps {
+		s = append(s, checkActive(state, tab))
+	}
+	return s
+}
+
 type item struct {
 	title, abbreviation string
 }
@@ -402,50 +352,11 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.abbreviation }
 func (i item) FilterValue() string { return i.title }
 
-func getKeyMapLangList() keyMapList {
-	return keyMapList{
-		sourceLangKey: key.NewBinding(
-			key.WithKeys("s"),
-			key.WithHelp("s", "choose source language"),
-		),
-		targetLangKey: key.NewBinding(
-			key.WithKeys("t"),
-			key.WithHelp("t", "choose target language"),
-		),
-		invertLangKey: key.NewBinding(
-			key.WithKeys("i"),
-			key.WithHelp("i", "invert languages"),
-		),
+func getConfLangs() []list.Item {
+	items := make([]list.Item, 0)
+
+	for abbrev, title := range translator.GetAllLanguages() {
+		items = append(items, item{title, abbrev})
 	}
-}
-
-type genKeyMap struct {
-	nextTab, prevTab, exitKey key.Binding
-}
-
-func (k genKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.nextTab, k.prevTab, k.exitKey}
-}
-
-func (k genKeyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.nextTab, k.prevTab, k.exitKey},
-	}
-}
-
-func getGenKeyMap() genKeyMap {
-	return genKeyMap{
-		nextTab: key.NewBinding(
-			key.WithKeys("tab"),
-			key.WithHelp("tab", "next tab"),
-		),
-		prevTab: key.NewBinding(
-			key.WithKeys("shift+tab"),
-			key.WithHelp("shift-tab", "previous tab"),
-		),
-		exitKey: key.NewBinding(
-			key.WithKeys("esc", "ctrl+c"),
-			key.WithHelp("esc/ctrl+c", "exit"),
-		),
-	}
+	return items
 }
