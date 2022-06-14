@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -35,9 +36,10 @@ type model struct {
 
 	keyMgr keyBindingMgr
 
-	result string
-	source string
-	target string
+	result      string
+	shortResult string
+	source      string
+	target      string
 
 	termInfoReady bool
 	state         int
@@ -46,8 +48,9 @@ type model struct {
 }
 
 type gotTrans struct {
-	Err    error
-	result string
+	Err         error
+	result      string
+	shortResult string
 }
 
 type Config interface {
@@ -166,7 +169,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// translating keybindings
-		if m.state == TRANSLATING {
+		if m.state == TRANSLATING && m.shortResult != "" {
 			switch msg.String() {
 			case "y":
 				m.yankTranslated()
@@ -197,6 +200,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.setState(TRANSLATING)
 		m.err = msg.Err
 		m.result = msg.result
+		m.shortResult = msg.shortResult
 		m.viewport.SetContent(m.result)
 	}
 
@@ -268,7 +272,7 @@ func (m model) fetchTranslation(query string) tea.Cmd {
 		if err != nil {
 			return gotTrans{Err: err, result: err.Error()}
 		}
-		return gotTrans{result: response.PrettyPrint()}
+		return gotTrans{result: response.PrettyPrint(), shortResult: response.TranslatedText}
 	}
 }
 
@@ -299,7 +303,9 @@ func (m *model) switchTab(direction int) {
 	m.setState(newState)
 }
 
-func (m *model) yankTranslated() {}
+func (m *model) yankTranslated() {
+	clipboard.WriteAll(m.shortResult)
+}
 
 func (m *model) renderFooter() string {
 	helpMenu := m.help.View(m.keyMgr)

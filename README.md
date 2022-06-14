@@ -66,9 +66,9 @@ For more information check the help (`got -h`)
 
 -   Interact with various translation engines easily via the terminal, no need to open a browser!
 -   Clean interface with 3 tabs, switch between them with tab/shift-tab:
-	-   **text input**: input the sentence you want to translate, press enter to translate
+	-   **text input**: input the sentence you want to translate, press **enter** to translate
 	-   **language selection**: choose between 108 languages, select source language with **s**, target with **t** and **i** to invert the target with the source. Press **?** to show the help menu
-	-   **translation**: pager that shows the result of translation
+	-   **translation**: pager that shows the result of translation. Copy translation with **y**
 - **engines**: choose between google, libre-translate, reverso and iciba (deepl is not working yet)
 -   quit anytime with **esc** or **ctrl-c**
 -   automatically remembers the last languages used
