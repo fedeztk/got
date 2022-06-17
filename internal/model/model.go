@@ -254,7 +254,7 @@ func (m model) View() string {
 
 	lenTabs := lipgloss.Width(translationStatus) + lipgloss.Width(tabsRow) + 2 // still don't know why 2 cells are missing
 
-	gap := tabGap.Render(strings.Repeat(" ", m.viewport.Width-lenTabs) + translationStatus)
+	gap := tabGap.Render(strings.Repeat(" ", diffOrZero(m.viewport.Width, lenTabs)) + translationStatus)
 	tabsRow = lipgloss.JoinHorizontal(lipgloss.Bottom, tabsRow, gap)
 
 	view := tabsRow + "\n\n\n" + content
@@ -324,7 +324,7 @@ func (m *model) renderFooter() string {
 
 	footerTop = strings.Repeat(" ", gapSize) + footerTop
 	footerMid = strings.Repeat("─", gapSize) + footerMid
-	footerBot = helpMenu + strings.Repeat(" ", gapSize-helpLen) + footerStyle.Render(footerBot)
+	footerBot = helpMenu + strings.Repeat(" ", diffOrZero(gapSize, helpLen)) + footerStyle.Render(footerBot)
 	footer := fmt.Sprintf("%s\n%s\n%s", footerTop, footerMid, footerBot)
 
 	return footerStyle.Render(footer)
@@ -365,4 +365,11 @@ func getConfLangs() []list.Item {
 		items = append(items, item{title, abbrev})
 	}
 	return items
+}
+
+func diffOrZero(x, y int) int {
+	if x > y {
+		return x - y
+	}
+	return 0
 }
