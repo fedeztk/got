@@ -5,7 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/key"
+	"github.com/atotto/clipboard"
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -13,7 +14,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/fedeztk/got/pkg/translator"
-	"github.com/mattn/go-runewidth"
 )
 
 const (
@@ -23,89 +23,34 @@ const (
 	TRANSLATING        // translation tab
 	LOADING            // loading inside input tab
 	// pager
-	headerHeight = 6 // 3 + 3 (padding of tabs)
+	headerHeight = 6 // 3 + 3 tabs and gaps
 	footerHeight = 3
-	// list
-	defaultListHeight = 34
-	defaultListWidth  = 14
-)
-
-var (
-	states = []int{TYPING, CHOOSING, TRANSLATING, LOADING}
-	// prompt
-	promptStyleIndicator = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-	placeholderStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	promptStyleUpperText = lipgloss.NewStyle().Background(lipgloss.Color("6")).Bold(true).MarginLeft(2).Padding(0, 1).Foreground(lipgloss.Color("0"))
-	promptStyleSelLang   = lipgloss.NewStyle().Foreground(lipgloss.Color("8")).MarginLeft(2)
-	// spinner
-	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
-	// list
-	titleStyle         = lipgloss.NewStyle().Background(lipgloss.Color("11")).Bold(true).Padding(0, 1).Foreground(lipgloss.Color("0"))
-	paginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
-	helpStyle          = list.DefaultStyles().HelpStyle.PaddingLeft(4)
-	statusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("9")).MarginLeft(2).Bold(true)
-	// errors
-	ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
-	// tabs
-	docStyle        = lipgloss.NewStyle().Align(lipgloss.Center)
-	activeTabBorder = lipgloss.Border{
-		Top:         "─",
-		Bottom:      " ",
-		Left:        "│",
-		Right:       "│",
-		TopLeft:     "╭",
-		TopRight:    "╮",
-		BottomLeft:  "┘",
-		BottomRight: "└",
-	}
-	tabBorder = lipgloss.Border{
-		Top:         "─",
-		Bottom:      "─",
-		Left:        "│",
-		Right:       "│",
-		TopLeft:     "╭",
-		TopRight:    "╮",
-		BottomLeft:  "┴",
-		BottomRight: "┴",
-	}
-	highlight = lipgloss.Color("4")
-	tab       = lipgloss.NewStyle().
-			Border(tabBorder, true).
-			BorderForeground(highlight).
-			Padding(0, 2)
-	activeTab = tab.Copy().Border(activeTabBorder, true).Bold(true)
-	tabGap    = tab.Copy().
-			BorderTop(false).
-			BorderLeft(false).
-			BorderRight(false)
-	// pager
-	footerStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("4"))
-	footerTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("7"))
 )
 
 type model struct {
-	textInput    textinput.Model
-	spinner      spinner.Model
-	viewport     viewport.Model
-	langList     list.Model
-	langListKeys keyMapList
+	textInput textinput.Model
+	spinner   spinner.Model
+	viewport  viewport.Model
+	langList  list.Model
+	help      help.Model
 
-	result string
-	source string
-	target string
+	keyMgr keyBindingMgr
+
+	result      string
+	shortResult string
+	source      string
+	target      string
 
 	termInfoReady bool
 	state         int
 	err           error
+	conf          Config
 }
 
 type gotTrans struct {
-	Err    error
-	result string
-}
-
-type keyMapList struct {
-	sourceLangKey, targetLangKey, invertLangKey key.Binding
+	Err         error
+	result      string
+	shortResult string
 }
 
 type Config interface {
@@ -115,9 +60,7 @@ type Config interface {
 	RememberLastSettings(source, target string)
 }
 
-var conf Config
-
-func newModel() *model {
+func newModel(c Config) *model {
 	t := textinput.NewModel()
 	t.Placeholder = "your text here"
 	t.PlaceholderStyle = placeholderStyle
@@ -128,38 +71,28 @@ func newModel() *model {
 	s.Spinner = spinner.Dot
 	s.Style = spinnerStyle
 
-	keys := getKeyMapLangList()
-	l := list.New(getConfLangs(), list.NewDefaultDelegate(), defaultListWidth, defaultListHeight)
+	l := list.New(getConfLangs(), list.NewDefaultDelegate(), 0, 0)
+	l.DisableQuitKeybindings()
+	l.SetShowHelp(false)
 	l.Title = "Available languages"
-	l.AdditionalFullHelpKeys = func() []key.Binding { return []key.Binding{keys.sourceLangKey, keys.targetLangKey, keys.invertLangKey} }
-	// l.Help.ShowAll = true
+	l.AdditionalFullHelpKeys = getListAdditionalKeyMap
 	l.Styles.Title = titleStyle
-	l.Styles.PaginationStyle = paginationStyle
-	l.Styles.HelpStyle = helpStyle
 
 	return &model{
-		langList:     l,
-		textInput:    t,
-		spinner:      s,
-		langListKeys: keys,
-		state:        TYPING,
-		source:       conf.Source(),
-		target:       conf.Target(),
+		langList:  l,
+		textInput: t,
+		spinner:   s,
+		state:     TYPING,
+		source:    c.Source(),
+		target:    c.Target(),
+		help:      help.New(),
+		conf:      c,
+		keyMgr:    newKeyBindingMgr(l.FullHelp()),
 	}
-}
-
-func getConfLangs() []list.Item {
-	items := make([]list.Item, 0)
-
-	for abbrev, title := range translator.GetAllLanguages() {
-		items = append(items, item{title, abbrev})
-	}
-	return items
 }
 
 func Run(c Config) {
-	conf = c
-	initialModel := newModel()
+	initialModel := newModel(c)
 
 	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if err := p.Start(); err != nil {
@@ -184,44 +117,62 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 
-		if m.state == CHOOSING {
-			switch {
-			case key.Matches(msg, m.langListKeys.sourceLangKey):
-				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
-				m.source = abbreviation
-				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Source language: " + title))
-				cmds = append(cmds, statusCmd)
-			case key.Matches(msg, m.langListKeys.targetLangKey):
-				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
-				m.target = abbreviation
-				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Target language: " + title))
-				cmds = append(cmds, statusCmd)
-			case key.Matches(msg, m.langListKeys.invertLangKey):
-				m.source, m.target = m.target, m.source
-				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Inverted languages: " + m.source + " → " + m.target))
-				cmds = append(cmds, statusCmd)
-			}
-		}
-
+		// global keybindings
 		switch msg.String() {
-		case "ctrl+c", "esc":
-			conf.RememberLastSettings(m.source, m.target)
-			return m, tea.Quit
-
 		case "tab":
 			m.switchTab(+1)
 
 		case "shift+tab":
 			m.switchTab(-1)
 
-		case "enter":
-			if m.state == TYPING {
+		case "ctrl+c", "esc":
+			m.conf.RememberLastSettings(m.source, m.target)
+			return m, tea.Quit
+		}
+
+		// language list keybindings
+		if m.state == CHOOSING {
+			switch msg.String() {
+			case "s":
+				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
+				m.source = abbreviation
+				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Source language: " + title))
+				cmds = append(cmds, statusCmd)
+
+			case "t":
+				abbreviation, title := m.langList.SelectedItem().(item).abbreviation, m.langList.SelectedItem().(item).title
+				m.target = abbreviation
+				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Target language: " + title))
+				cmds = append(cmds, statusCmd)
+
+			case "i":
+				m.source, m.target = m.target, m.source
+				statusCmd := m.langList.NewStatusMessage(statusMessageStyle.Render("Inverted languages: " + m.source + " → " + m.target))
+				cmds = append(cmds, statusCmd)
+
+			case "?":
+				m.help.ShowAll = !m.help.ShowAll
+			}
+		}
+
+		// text input keybindings
+		if m.state == TYPING {
+			switch msg.String() {
+			case "enter":
 				query := strings.TrimSpace(m.textInput.Value())
 				if query != "" {
-					m.state = LOADING
+					m.setState(LOADING)
 					cmds = append(cmds, spinner.Tick)
 					cmds = append(cmds, m.fetchTranslation(query))
 				}
+			}
+		}
+
+		// translating keybindings
+		if m.state == TRANSLATING && m.shortResult != "" {
+			switch msg.String() {
+			case "y":
+				m.yankTranslated()
 			}
 		}
 
@@ -242,11 +193,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.langList.SetWidth(msg.Width)
 		m.langList.SetHeight(msg.Height - verticalMargins)
 
+		m.help.Width = msg.Width
+
 		// translation fetched
 	case gotTrans:
-		m.state = TRANSLATING
+		m.setState(TRANSLATING)
 		m.err = msg.Err
 		m.result = msg.result
+		m.shortResult = msg.shortResult
 		m.viewport.SetContent(m.result)
 	}
 
@@ -273,97 +227,127 @@ func (m model) View() string {
 		return "Initializing..."
 	}
 
-	// Tabs
-	doc := strings.Builder{}
-	var row, content string
+	// Tabs:
+	// tabsRow renders the tabs header
+	// content renders the content based on the current tab
+	var tabsRow, content string
+
+	tabsRow = lipgloss.JoinHorizontal(lipgloss.Top, m.renderTabs()...)
 
 	switch m.state {
 	case TYPING:
-		row = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			activeTab.Render("Text input"),
-			tab.Render("Language selection"),
-			tab.Render("Translation"),
-		)
-		content = promptStyleUpperText.Render("Enter sentence") +
-			fmt.Sprintf("\n\n%s\n\n(exit with ctrl-c)", m.textInput.View())
+		content = promptStyleUpperText.Render("Enter sentence") + "\n\n" + m.textInput.View()
 	case LOADING:
-		row = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			activeTab.Render("Text input"),
-			tab.Render("Language selection"),
-			tab.Render("Translation"),
-		)
 		content = fmt.Sprintf("%s fetching results... please wait.", m.spinner.View())
 	case TRANSLATING:
-		row = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			tab.Render("Text input"),
-			tab.Render("Language selection"),
-			activeTab.Render("Translation"),
-		)
 		if m.err != nil {
 			content = ErrorStyle.Render(m.err.Error())
 		} else {
-			content = m.formatTranslation()
+			content = m.viewport.View()
 		}
 	case CHOOSING:
-		row = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			tab.Render("Text input"),
-			activeTab.Render("Language selection"),
-			tab.Render("Translation"),
-		)
 		content = m.langList.View()
 	}
 
-	translationStatus := promptStyleSelLang.Render(fmt.Sprintf("%s → %s (%s engine)", m.source, m.target, conf.Engine()))
-	lenTabs := lipgloss.Width(translationStatus) + lipgloss.Width(row) + 2 // still don't know why 2 cells are missing
+	// holds top right translation info
+	translationStatus := promptStyleSelLang.Render(fmt.Sprintf("%s → %s (%s engine)", m.source, m.target, m.conf.Engine()))
 
-	gap := tabGap.Render(strings.Repeat(" ", m.viewport.Width-lenTabs) + translationStatus)
-	row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
-	doc.WriteString(row + "\n\n")
-	return docStyle.Render(doc.String()) + "\n" + content
+	lenTabs := lipgloss.Width(translationStatus) + lipgloss.Width(tabsRow) + 2 // still don't know why 2 cells are missing
+
+	gap := tabGap.Render(strings.Repeat(" ", diffOrZero(m.viewport.Width, lenTabs)) + translationStatus)
+	tabsRow = lipgloss.JoinHorizontal(lipgloss.Bottom, tabsRow, gap)
+
+	view := tabsRow + "\n\n\n" + content
+
+	return view + lipgloss.PlaceVertical(
+		(m.viewport.Height+headerHeight+footerHeight)- // total height of terminal as originally received
+			lipgloss.Height(view), // height of already utilized space
+		lipgloss.Bottom,
+		m.renderFooter())
 }
 
 func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
-		response, err := translator.Translate(query, m.source, m.target, conf.Engine())
+		response, err := translator.Translate(query, m.source, m.target, m.conf.Engine())
 		if err != nil {
 			return gotTrans{Err: err, result: err.Error()}
 		}
-		return gotTrans{result: response.PrettyPrint()}
+		return gotTrans{result: response.PrettyPrint(), shortResult: response.TranslatedText}
 	}
 }
 
+func (m *model) setState(state int) {
+	m.state = state
+	m.keyMgr.state = state
+}
+
 func (m *model) switchTab(direction int) {
-	newState := (m.state + direction) % len(states)
-	if newState == LOADING {
-		newState = states[0]
+	states := []int{TYPING, CHOOSING, TRANSLATING}
+
+	var newState int
+	if direction > 0 {
+		newState = states[(m.state+1)%len(states)]
+	} else {
+		newState = states[(m.state-1+len(states))%len(states)]
 	}
-	if newState < 0 {
-		newState = TRANSLATING
-	}
+
 	if newState == TYPING {
 		m.textInput.Focus()
 	} else {
 		m.textInput.Blur()
 	}
-	m.state = newState
+	if newState != CHOOSING {
+		m.help.ShowAll = false
+	}
+
+	m.setState(newState)
 }
 
-func (m model) formatTranslation() string {
-	footerTop := "╭──────╮"
-	percentStr := fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100)
-	footerMid := "┤ " + footerTextStyle.Render(percentStr) + footerStyle.Render(" │")
-	footerBot := "╰──────╯"
-	gapSize := m.viewport.Width - (runewidth.StringWidth(percentStr) + 4)
+func (m *model) yankTranslated() {
+	clipboard.WriteAll(m.shortResult)
+}
+
+func (m *model) renderFooter() string {
+	helpMenu := m.help.View(m.keyMgr)
+	helpLen := lipgloss.Width(helpMenu)
+	footerTop, footerMid, footerBot := "", "", ""
+	gapSize := m.viewport.Width
+
+	// leave some space for the percentage of the viewport
+	if m.state == TRANSLATING {
+		percentStr := fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100)
+		footerTop = "╭──────╮"
+		footerMid = "┤ " + footerTextStyle.Render(percentStr) + footerStyle.Render(" │")
+		footerBot = "╰──────╯"
+		gapSize -= lipgloss.Width(percentStr) + 4
+	}
+
 	footerTop = strings.Repeat(" ", gapSize) + footerTop
 	footerMid = strings.Repeat("─", gapSize) + footerMid
-	footerBot = strings.Repeat(" ", gapSize) + footerBot
+	footerBot = helpMenu + strings.Repeat(" ", diffOrZero(gapSize, helpLen)) + footerStyle.Render(footerBot)
 	footer := fmt.Sprintf("%s\n%s\n%s", footerTop, footerMid, footerBot)
 
-	return fmt.Sprintf("%s\n%s", m.viewport.View(), footerStyle.Render(footer))
+	return footerStyle.Render(footer)
+}
+
+func (m *model) renderTabs() []string {
+	stateMaps := []string{
+		TYPING:      "Text input",
+		CHOOSING:    "Language selection",
+		TRANSLATING: "Translation",
+	}
+	checkActive := func(i int, title string) string {
+		if i == m.state {
+			return activeTab.Render(title)
+		}
+		return tab.Render(title)
+	}
+
+	s := []string{}
+	for state, tab := range stateMaps {
+		s = append(s, checkActive(state, tab))
+	}
+	return s
 }
 
 type item struct {
@@ -374,19 +358,18 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.abbreviation }
 func (i item) FilterValue() string { return i.title }
 
-func getKeyMapLangList() keyMapList {
-	return keyMapList{
-		sourceLangKey: key.NewBinding(
-			key.WithKeys("s"),
-			key.WithHelp("s", "choose source language"),
-		),
-		targetLangKey: key.NewBinding(
-			key.WithKeys("t"),
-			key.WithHelp("t", "choose target language"),
-		),
-		invertLangKey: key.NewBinding(
-			key.WithKeys("i"),
-			key.WithHelp("i", "invert languages"),
-		),
+func getConfLangs() []list.Item {
+	items := make([]list.Item, 0)
+
+	for abbrev, title := range translator.GetAllLanguages() {
+		items = append(items, item{title, abbrev})
 	}
+	return items
+}
+
+func diffOrZero(x, y int) int {
+	if x > y {
+		return x - y
+	}
+	return 0
 }

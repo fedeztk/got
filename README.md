@@ -10,6 +10,8 @@
 
 go-translation (shortly `got`), a simple translator build on top of [simplytranslate's APIs](https://codeberg.org/SimpleWeb/SimplyTranslate-Web/src/branch/master/api.md) and the awesome [bubbletea](https://github.com/charmbracelet/bubbletea) tui library.
 
+Screenshots [here](#org26baa6c)
+
 > Disclaimer: this is my absolute first project in golang, so bugs and clunky code are expected&#x2026;
 
 > The project is still a work-in-progress, breaking changes and heavy refactoring may happen
@@ -66,9 +68,14 @@ For more information check the help (`got -h`)
 
 -   Interact with various translation engines easily via the terminal, no need to open a browser!
 -   Clean interface with 3 tabs, switch between them with tab/shift-tab:
-	-   **text input**: input the sentence you want to translate, press enter to translate
-	-   **language selection**: choose between 108 languages, select source language with **s**, target with **t** and **i** to invert the target with the source. Press **h** to show the help menu
-	-   **translation**: pager that shows the result of translation
+	-   **text input**: input the sentence you want to translate, press **enter** to translate
+![image](https://user-images.githubusercontent.com/58485208/173687247-2a1ad240-44f8-46ff-b8de-c55b3eccc4c4.png)
+	-   **language selection**: choose between 108 languages, select source language with **s**, target with **t** and **i** to invert the target with the source. Press **?** to show the full help menu
+	![image](https://user-images.githubusercontent.com/58485208/173687797-6325ccc9-5745-43af-b9a8-35b97bd94675.png)
+	Full help:
+	![image](https://user-images.githubusercontent.com/58485208/173687516-33d48c4c-206a-4b85-9678-ee6684ba71e4.png)
+	-   **translation**: pager that shows the result of translation. Copy translation with **y**
+	![image](https://user-images.githubusercontent.com/58485208/173687675-5d073c2c-428a-4a27-9cb2-4b0c803a8a5e.png)
 - **engines**: choose between google, libre-translate, reverso and iciba (deepl is not working yet)
 -   quit anytime with **esc** or **ctrl-c**
 -   automatically remembers the last languages used
