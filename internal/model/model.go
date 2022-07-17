@@ -1,9 +1,13 @@
 package model
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/help"
@@ -13,6 +17,9 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
 	"github.com/fedeztk/got/pkg/translator"
 )
 
@@ -26,6 +33,8 @@ const (
 	headerHeight = 6 // 3 + 3 tabs and gaps
 	footerHeight = 3
 )
+
+var once sync.Once
 
 type model struct {
 	textInput textinput.Model
@@ -41,6 +50,7 @@ type model struct {
 	source      string
 	target      string
 
+	playing       bool
 	termInfoReady bool
 	state         int
 	err           error
@@ -51,6 +61,11 @@ type gotTrans struct {
 	Err         error
 	result      string
 	shortResult string
+}
+
+type gotTTS struct {
+	Err    error
+	result []byte
 }
 
 type Config interface {
@@ -105,7 +120,7 @@ func (m model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -173,10 +188,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "y":
 				m.yankTranslated()
+
+			case "p":
+				m.setState(LOADING)
+				cmds = append(cmds, spinner.Tick)
+				cmds = append(cmds, m.fetchTextToSpeech(m.shortResult))
 			}
 		}
 
-		// called on terminal resize
+	// called on terminal resize
 	case tea.WindowSizeMsg:
 		verticalMargins := headerHeight + footerHeight
 
@@ -195,13 +215,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.help.Width = msg.Width
 
-		// translation fetched
+	// translation fetched
 	case gotTrans:
 		m.setState(TRANSLATING)
 		m.err = msg.Err
 		m.result = msg.result
 		m.shortResult = msg.shortResult
 		m.viewport.SetContent(m.result)
+
+	// text to speech fetched
+	case gotTTS:
+		m.setState(TRANSLATING)
+		m.err = msg.Err
+		go m.playTTS(msg.result)
 	}
 
 	switch m.state {
@@ -276,6 +302,16 @@ func (m model) fetchTranslation(query string) tea.Cmd {
 	}
 }
 
+func (m model) fetchTextToSpeech(query string) tea.Cmd {
+	return func() tea.Msg {
+		response, err := translator.TextToSpeech(query, m.target)
+		if err != nil {
+			return gotTTS{Err: err}
+		}
+		return gotTTS{result: response}
+	}
+}
+
 func (m *model) setState(state int) {
 	m.state = state
 	m.keyMgr.state = state
@@ -345,9 +381,34 @@ func (m *model) renderTabs() []string {
 
 	s := []string{}
 	for state, tab := range stateMaps {
+		if state == TRANSLATING && m.playing {
+			tab += " "
+		}
+
 		s = append(s, checkActive(state, tab))
 	}
 	return s
+}
+
+func (m *model) playTTS(audio []byte) {
+	streamer, format, _ := mp3.Decode(ioutil.NopCloser(bytes.NewReader(audio)))
+	defer streamer.Close()
+
+	once.Do(func() {
+		speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	})
+
+	done := make(chan bool)
+	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+		m.playing = true
+		defer func() {
+			m.playing = false
+		}()
+
+		done <- true
+	})))
+
+	<-done
 }
 
 type item struct {
