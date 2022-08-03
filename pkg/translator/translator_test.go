@@ -51,3 +51,19 @@ func TestPrettyPrint(t *testing.T) {
 		}
 	}
 }
+
+func TestTTS(t *testing.T) {
+	testCases := []struct {
+		text, lang string
+	}{
+		{"coperchio", "it"},
+		{"ciao", "it"},
+		{"Hello World!", "en"},
+	}
+	for _, tc := range testCases {
+		_, err := TextToSpeech(tc.text, tc.lang)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -113,4 +114,59 @@ type Response struct {
 		Words     []string `json:"words,omitempty"`
 		Frequency string   `json:"frequency,omitempty"`
 	} `json:"translations,omitempty"`
+}
+
+func TextToSpeech(text, lang string) ([]byte, error) {
+	var r []byte
+	t := struct {
+		client    http.Client
+		languages map[string]string
+		engine    string
+	}{
+		client:    http.Client{},
+		languages: languageMap,
+		engine:    "google",
+	}
+
+	// only google tts is supported
+	engine := t.engine
+
+	if text == "" {
+		return r, nil
+	}
+	if lang == "" {
+		lang = "en"
+	}
+
+	if _, ok := t.languages[lang]; !ok {
+		return r, errors.New("language not supported")
+	}
+
+	const ttsURL = "https://simplytranslate.org/api/tts/?engine="
+	req, err := http.NewRequest("GET", ttsURL+engine, nil)
+	if err != nil {
+		return r, err
+	}
+
+	query := req.URL.Query()
+	query.Add("lang", lang)
+	query.Add("text", text)
+	req.URL.RawQuery = query.Encode()
+
+	res, err := t.client.Do(req)
+	if err != nil {
+		return r, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return r, errors.New("Unable to get TextToSpeech! Status code received from server: " + res.Status)
+	}
+
+	r, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		return r, err
+	}
+
+	return r, nil
 }

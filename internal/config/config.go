@@ -11,9 +11,10 @@ type Config struct {
 }
 
 func NewConfig() *Config {
+	home, _ := os.UserHomeDir()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath("$HOME/.config/got")
+	viper.AddConfigPath(home + "/.config/got")
 
 	err := viper.ReadInConfig()
 	if err != nil {
