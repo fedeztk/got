@@ -50,7 +50,6 @@ type model struct {
 	source      string
 	target      string
 
-	playing       bool
 	termInfoReady bool
 	state         int
 	err           error
@@ -381,10 +380,6 @@ func (m *model) renderTabs() []string {
 
 	s := []string{}
 	for state, tab := range stateMaps {
-		if state == TRANSLATING && m.playing {
-			tab += " "
-		}
-
 		s = append(s, checkActive(state, tab))
 	}
 	return s
@@ -400,11 +395,6 @@ func (m *model) playTTS(audio []byte) {
 
 	done := make(chan bool)
 	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
-		m.playing = true
-		defer func() {
-			m.playing = false
-		}()
-
 		done <- true
 	})))
 
