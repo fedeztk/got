@@ -79,6 +79,10 @@ var (
 			key.WithKeys("y"),
 			key.WithHelp("y", "copy to clipboard"),
 		),
+		key.NewBinding(
+			key.WithKeys("p"),
+			key.WithHelp("p", "play translation"),
+		),
 	}
 
 	getListAdditionalKeyMap = func() []key.Binding {
