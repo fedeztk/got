@@ -8,7 +8,7 @@
 [Features](#org26baa6c) -
 [Testing](#org2744438)
 
-go-translation (shortly `got`), a simple translator build on top of [simplytranslate's APIs](https://codeberg.org/SimpleWeb/SimplyTranslate-Web/src/branch/master/api.md) and the awesome [bubbletea](https://github.com/charmbracelet/bubbletea) tui library.
+go-translation (shortly `got`), a simple translator and text-to-speech app build on top of [simplytranslate's APIs](https://codeberg.org/SimpleWeb/SimplyTranslate-Web/src/branch/master/api.md) and the awesome [bubbletea](https://github.com/charmbracelet/bubbletea) tui library.
 
 Screenshots [here](#org26baa6c)
 
@@ -74,7 +74,7 @@ For more information check the help (`got -h`)
 	![image](https://user-images.githubusercontent.com/58485208/173687797-6325ccc9-5745-43af-b9a8-35b97bd94675.png)
 	Full help:
 	![image](https://user-images.githubusercontent.com/58485208/173687516-33d48c4c-206a-4b85-9678-ee6684ba71e4.png)
-	-   **translation**: pager that shows the result of translation. Copy translation with **y**
+	-   **translation**: pager that shows the result of translation. Copy translation with **y**, listen the translation with **p**
 	![image](https://user-images.githubusercontent.com/58485208/173687675-5d073c2c-428a-4a27-9cb2-4b0c803a8a5e.png)
 - **engines**: choose between google, libre-translate, reverso and iciba (deepl is not working yet)
 -   quit anytime with **esc** or **ctrl-c**
