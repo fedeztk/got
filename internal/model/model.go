@@ -21,6 +21,7 @@ import (
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/fedeztk/got/pkg/translator"
+	zone "github.com/lrstanley/bubblezone"
 )
 
 const (
@@ -106,6 +107,7 @@ func newModel(c Config) *model {
 }
 
 func Run(c Config) {
+	zone.NewGlobal()
 	initialModel := newModel(c)
 
 	p := tea.NewProgram(initialModel, tea.WithAltScreen(), tea.WithMouseCellMotion())
@@ -194,6 +196,45 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+	case tea.MouseMsg:
+		switch msg.Type {
+		case tea.MouseWheelDown:
+			state := m.state
+			switch state {
+			// case TRANSLATING:
+			// implemented by viewport bubble
+			case CHOOSING:
+				if zone.Get("choosing").InBounds(msg) {
+					m.langList.CursorDown()
+				}
+			}
+			if zone.Get("tabsRow").InBounds(msg) {
+				m.switchTab(+1)
+			}
+		case tea.MouseWheelUp:
+			state := m.state
+			switch state {
+			// case TRANSLATING:
+			// implemented by viewport bubble
+			case CHOOSING:
+				if zone.Get("choosing").InBounds(msg) {
+					m.langList.CursorUp()
+				}
+			}
+			if zone.Get("tabsRow").InBounds(msg) {
+				m.switchTab(-1)
+			}
+		case tea.MouseLeft:
+			if zone.Get("choosing").InBounds(msg) {
+				for i, listItem := range m.langList.VisibleItems() {
+					if zone.Get(listItem.(item).abbreviation).InBounds(msg) {
+						m.langList.Select(i)
+						break
+					}
+				}
+			}
+		}
+
 	// called on terminal resize
 	case tea.WindowSizeMsg:
 		verticalMargins := headerHeight + footerHeight
@@ -201,6 +242,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// update pager
 		if !m.termInfoReady { // first time receiving terminal size, we don't have a viewport yet
 			m.viewport = viewport.Model{Width: msg.Width, Height: msg.Height - verticalMargins}
+			m.viewport.MouseWheelEnabled = true
 			m.termInfoReady = true
 		} else { // resize according to the new terminal size
 			m.viewport.Width = msg.Width
@@ -256,7 +298,7 @@ func (m model) View() string {
 	// content renders the content based on the current tab
 	var tabsRow, content string
 
-	tabsRow = lipgloss.JoinHorizontal(lipgloss.Top, m.renderTabs()...)
+	tabsRow = zone.Mark("tabsRow", lipgloss.JoinHorizontal(lipgloss.Top, m.renderTabs()...))
 
 	switch m.state {
 	case TYPING:
@@ -270,7 +312,7 @@ func (m model) View() string {
 			content = m.viewport.View()
 		}
 	case CHOOSING:
-		content = m.langList.View()
+		content = zone.Mark("choosing", m.langList.View())
 	}
 
 	// holds top right translation info
@@ -283,11 +325,12 @@ func (m model) View() string {
 
 	view := tabsRow + "\n\n\n" + content
 
-	return view + lipgloss.PlaceVertical(
-		(m.viewport.Height+headerHeight+footerHeight)- // total height of terminal as originally received
-			lipgloss.Height(view), // height of already utilized space
-		lipgloss.Bottom,
-		m.renderFooter())
+	return zone.Scan(
+		view + lipgloss.PlaceVertical(
+			(m.viewport.Height+headerHeight+footerHeight)- // total height of terminal as originally received
+				lipgloss.Height(view), // height of already utilized space
+			lipgloss.Bottom,
+			m.renderFooter()))
 }
 
 func (m model) fetchTranslation(query string) tea.Cmd {
@@ -379,7 +422,7 @@ func (m *model) renderTabs() []string {
 
 	s := []string{}
 	for state, tab := range stateMaps {
-		s = append(s, checkActive(state, tab))
+		s = append(s, zone.Mark(tab, checkActive(state, tab)))
 	}
 	return s
 }
@@ -404,9 +447,9 @@ type item struct {
 	title, abbreviation string
 }
 
-func (i item) Title() string       { return i.title }
+func (i item) Title() string       { return zone.Mark(i.abbreviation, i.title) }
 func (i item) Description() string { return i.abbreviation }
-func (i item) FilterValue() string { return i.title }
+func (i item) FilterValue() string { return zone.Mark(i.abbreviation, i.title+i.abbreviation) }
 
 func getConfLangs() []list.Item {
 	items := make([]list.Item, 0)
