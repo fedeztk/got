@@ -21,6 +21,7 @@ import (
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	"github.com/fedeztk/got/pkg/translator"
+	"github.com/fedeztk/got/pkg/translator/utils"
 )
 
 const (
@@ -54,6 +55,7 @@ type model struct {
 	state         int
 	err           error
 	conf          Config
+	backend       translator.Backend
 }
 
 type gotTrans struct {
@@ -71,6 +73,7 @@ type Config interface {
 	Source() string
 	Target() string
 	Engine() string
+	Backend() string
 	RememberLastSettings(source, target string)
 }
 
@@ -92,6 +95,12 @@ func newModel(c Config) *model {
 	l.AdditionalFullHelpKeys = getListAdditionalKeyMap
 	l.Styles.Title = titleStyle
 
+	backend, err := translator.NewBackend(c.Backend())
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
 	return &model{
 		langList:  l,
 		textInput: t,
@@ -102,6 +111,7 @@ func newModel(c Config) *model {
 		help:      help.New(),
 		conf:      c,
 		keyMgr:    newKeyBindingMgr(l.FullHelp()),
+		backend:   backend,
 	}
 }
 
@@ -292,17 +302,17 @@ func (m model) View() string {
 
 func (m model) fetchTranslation(query string) tea.Cmd {
 	return func() tea.Msg {
-		response, err := translator.Translate(query, m.source, m.target, m.conf.Engine())
+		response, err := m.backend.Translate(query, m.source, m.target, m.conf.Engine())
 		if err != nil {
 			return gotTrans{Err: err, result: err.Error()}
 		}
-		return gotTrans{result: response.PrettyPrint(), shortResult: response.TranslatedText}
+		return gotTrans{result: response.PrettyPrint(), shortResult: response.ShortTranslatedText()}
 	}
 }
 
 func (m model) fetchTextToSpeech(query string) tea.Cmd {
 	return func() tea.Msg {
-		response, err := translator.TextToSpeech(query, m.target)
+		response, err := m.backend.TextToSpeech(query, m.target)
 		if err != nil {
 			return gotTTS{Err: err}
 		}
@@ -411,7 +421,7 @@ func (i item) FilterValue() string { return i.title }
 func getConfLangs() []list.Item {
 	items := make([]list.Item, 0)
 
-	for abbrev, title := range translator.GetAllLanguages() {
+	for abbrev, title := range utils.GetAllLanguages() {
 		items = append(items, item{title, abbrev})
 	}
 	return items

@@ -1,4 +1,4 @@
-package translator
+package simplytranslate
 
 import (
 	"strings"
@@ -14,6 +14,10 @@ var (
 	titleSec    = indentTwo.Copy().Bold(true).Background(lipgloss.Color("13")).Padding(0, 1).Foreground(lipgloss.Color("0")).MarginBottom(1).MarginTop(1)
 	listItem    = indentTwo.Copy().Bold(true)
 )
+
+func (r Response) ShortTranslatedText() string {
+	return r.TranslatedText
+}
 
 func (r Response) PrettyPrint() string {
 	builder := strings.Builder{}
