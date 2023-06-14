@@ -37,6 +37,7 @@ type Response struct {
 		} `json:"extraTranslations,omitempty"`
 	} `json:"info,omitempty"`
 }
+
 type LingvaTranslate struct {
 	languages map[string]string
 	client    http.Client
@@ -96,6 +97,10 @@ func (b LingvaTranslate) Translate(text, source, target, engine string) (utils.B
 }
 
 func (b LingvaTranslate) TextToSpeech(text, lang string) ([]byte, error) {
+	type audioResponse struct {
+		Audio []byte `json:"audio,omitempty"`
+	}
+
 	var r []byte
 
 	if text == "" {
@@ -115,11 +120,6 @@ func (b LingvaTranslate) TextToSpeech(text, lang string) ([]byte, error) {
 		return r, err
 	}
 
-	query := req.URL.Query()
-	query.Add("lang", lang)
-	query.Add("text", text)
-	req.URL.RawQuery = query.Encode()
-
 	res, err := b.client.Do(req)
 	if err != nil {
 		return r, err
@@ -135,5 +135,12 @@ func (b LingvaTranslate) TextToSpeech(text, lang string) ([]byte, error) {
 		return r, err
 	}
 
-	return r, nil
+	// get only audio from r
+	var audio audioResponse
+	err = json.Unmarshal(r, &audio)
+	if err != nil {
+		return r, err
+	}
+
+	return audio.Audio, nil
 }
