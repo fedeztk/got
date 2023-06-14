@@ -3,7 +3,6 @@ module github.com/fedeztk/got
 go 1.18
 
 require (
-	github.com/JohannesKaufmann/html-to-markdown v1.4.0
 	github.com/atotto/clipboard v0.1.4
 	github.com/charmbracelet/bubbles v0.10.3
 	github.com/charmbracelet/bubbletea v0.22.1
@@ -13,12 +12,9 @@ require (
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.1 // indirect
-	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	golang.org/x/net v0.9.0 // indirect
 )
 
 require (
@@ -51,6 +47,7 @@ require (
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

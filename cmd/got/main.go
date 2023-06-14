@@ -87,6 +87,8 @@ Deepl is not supported yet and defaults to google`,
 		}
 		if *backend != "" {
 			conf.SetBackend(*backend)
+		}
+		if conf.Backend() == "lingvatranslate" {
 			conf.SetEngine("google")
 		}
 		model.Run(conf)
