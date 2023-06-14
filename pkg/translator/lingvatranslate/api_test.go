@@ -1,4 +1,4 @@
-package translator
+package lingvatranslate
 
 import (
 	"encoding/json"
@@ -14,19 +14,17 @@ func TestTranslation(t *testing.T) {
 		{"corsa", "it", "en"},
 		{"exit", "en", "it"},
 	}
-	testEngines := []string{"google", "deepl", "libre", "iciba", "reverso"}
+	b := New()
 	for _, tc := range testCases {
-		for _, engine := range testEngines {
-			res, err := Translate(tc.text, tc.source, tc.target, engine)
-			if err != nil {
-				t.Error(err)
-			}
-			resJSON, err := json.MarshalIndent(res, "", "    ")
-			if err != nil {
-				t.Error(err)
-			}
-			t.Log(string(resJSON))
+		res, err := b.Translate(tc.text, tc.source, tc.target, "")
+		if err != nil {
+			t.Error(err)
 		}
+		resJSON, err := json.MarshalIndent(res, "", "    ")
+		if err != nil {
+			t.Error(err)
+		}
+		t.Log(string(resJSON))
 	}
 }
 
@@ -40,15 +38,13 @@ func TestPrettyPrint(t *testing.T) {
 		{"exit", "en", "it"},
 		{"the", "en", "it"},
 	}
-	testEngines := []string{"google", "deepl", "libre", "iciba", "reverso"}
+	b := New()
 	for _, tc := range testCases {
-		for _, engine := range testEngines {
-			res, err := Translate(tc.text, tc.source, tc.target, engine)
-			if err != nil {
-				t.Error(err)
-			}
-			t.Log(res.PrettyPrint())
+		res, err := b.Translate(tc.text, tc.source, tc.target, "")
+		if err != nil {
+			t.Error(err)
 		}
+		t.Log(res.PrettyPrint())
 	}
 }
 
@@ -60,8 +56,9 @@ func TestTTS(t *testing.T) {
 		{"ciao", "it"},
 		{"Hello World!", "en"},
 	}
+	b := New()
 	for _, tc := range testCases {
-		_, err := TextToSpeech(tc.text, tc.lang)
+		_, err := b.TextToSpeech(tc.text, tc.lang)
 		if err != nil {
 			t.Error(err)
 		}

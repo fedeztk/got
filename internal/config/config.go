@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	sourceLang, targetLang, engine string
+	sourceLang, targetLang, engine, backend string
 }
 
 func NewConfig() *Config {
@@ -24,6 +24,7 @@ func NewConfig() *Config {
 		sourceLang: viper.GetString("source"),
 		targetLang: viper.GetString("target"),
 		engine:     viper.GetString("engine"),
+		backend:    viper.GetString("backend"),
 	}
 }
 
@@ -56,8 +57,16 @@ func (c *Config) Engine() string {
 	return c.engine
 }
 
+func (c *Config) Backend() string {
+	return c.backend
+}
+
 func (c *Config) SetEngine(engine string) {
 	c.engine = engine
+}
+
+func (c *Config) SetBackend(backend string) {
+	c.backend = backend
 }
 
 func (c *Config) RememberLastSettings(source, target string) {
@@ -65,6 +74,7 @@ func (c *Config) RememberLastSettings(source, target string) {
 		write{"source", source},
 		write{"target", target},
 		write{"engine", c.engine},
+		write{"backend", c.backend},
 	)
 }
 
@@ -76,5 +86,6 @@ func writeDefaultConfig() {
 		write{"source", "en"},
 		write{"target", "it"},
 		write{"engine", "google"},
+		write{"backend", "lingvatranslate"},
 	)
 }
