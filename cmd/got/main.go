@@ -40,7 +40,14 @@ func main() {
 	engine := flag.String(
 		"e",
 		"",
-		"engine, could be: google (default), iciba, reverso, libre\nDeepl is not supported yet and defaults to google",
+		`engine is only supported with simplytranslate backend, see -b
+could be: google (default), iciba, reverso, libre
+Deepl is not supported yet and defaults to google`,
+	)
+	backend := flag.String(
+		"b",
+		"",
+		"backend could be lingvatranslate (default) or simplytranslate",
 	)
 	flag.Parse()
 
@@ -56,7 +63,17 @@ func main() {
 		if *engine == "" {
 			*engine = "google"
 		}
-		response, err := translator.Translate(strings.Join(flag.Args(), " "), *source, *target, *engine)
+		if *backend == "" {
+			*backend = "lingvatranslate"
+		}
+
+		backend, err := translator.NewBackend(*backend)
+		if err != nil {
+			fmt.Println(model.ErrorStyle.Render(err.Error()))
+			os.Exit(1)
+		}
+		response, err := backend.Translate(strings.Join(flag.Args(), " "), *source, *target, *engine)
+
 		if err != nil {
 			fmt.Println(model.ErrorStyle.Render(err.Error()))
 			os.Exit(1)
@@ -67,6 +84,12 @@ func main() {
 		conf := config.NewConfig()
 		if *engine != "" {
 			conf.SetEngine(*engine)
+		}
+		if *backend != "" {
+			conf.SetBackend(*backend)
+		}
+		if conf.Backend() == "lingvatranslate" {
+			conf.SetEngine("google")
 		}
 		model.Run(conf)
 	}
