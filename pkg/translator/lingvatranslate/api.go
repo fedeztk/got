@@ -19,10 +19,10 @@ type Response struct {
 		Definitions []struct {
 			Type string `json:"type,omitempty"`
 			List []struct {
-				Definition string `json:"definition,omitempty"`
-				Example    string `json:"example,omitempty"`
-				Synonyms   []any  `json:"synonyms,omitempty"`
-				Field      string `json:"field,omitempty"`
+				Definition string   `json:"definition,omitempty"`
+				Example    string   `json:"example,omitempty"`
+				Synonyms   []string `json:"synonyms,omitempty"`
+				Field      string   `json:"field,omitempty"`
 			} `json:"list,omitempty"`
 		} `json:"definitions,omitempty"`
 		Examples          []string `json:"examples,omitempty"`

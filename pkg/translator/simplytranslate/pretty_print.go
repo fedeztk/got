@@ -3,16 +3,7 @@ package simplytranslate
 import (
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
-)
-
-var (
-	indentOne   = lipgloss.NewStyle().Margin(0, 0, 0, 2)
-	indentTwo   = indentOne.Copy().Margin(0, 0, 0, 4)
-	indentThree = indentTwo.Copy().Margin(0, 0, 0, 6).MaxWidth(80)
-	title       = indentOne.Copy().Bold(true).Background(lipgloss.Color("12")).Padding(0, 1).Foreground(lipgloss.Color("0"))
-	titleSec    = indentTwo.Copy().Bold(true).Background(lipgloss.Color("13")).Padding(0, 1).Foreground(lipgloss.Color("0")).MarginBottom(1).MarginTop(1)
-	listItem    = indentTwo.Copy().Bold(true)
+	"github.com/fedeztk/got/pkg/translator/utils"
 )
 
 func (r Response) ShortTranslatedText() string {
@@ -21,50 +12,44 @@ func (r Response) ShortTranslatedText() string {
 
 func (r Response) PrettyPrint() string {
 	builder := strings.Builder{}
-	builder.WriteString(title.Render("Translated text: "+r.TranslatedText) + "\n")
+	builder.WriteString(utils.Title.Render("Translated text: "+r.TranslatedText) + "\n")
 	for category, defByCategory := range r.DefinitionsByCategory {
-		builder.WriteString(titleSec.Render("Part of speech: "+
+		builder.WriteString(utils.TitleSec.Render("Part of speech: "+
 			getPartOfSpeechOrUndefined(category)) + "\n")
 		for _, def := range defByCategory {
 			if definition := def.Definition; definition != "" {
-				builder.WriteString(indentTwo.Render("Definition:"))
-				builder.WriteString("\n" + indentThree.Render("- "+definition) + "\n")
+				builder.WriteString(utils.IndentTwo.Render("Definition:"))
+				builder.WriteString("\n" + utils.IndentThree.Render("- "+definition) + "\n")
 			}
 			if dictionary := def.Dictionary; dictionary != "" {
-				builder.WriteString(indentTwo.Render("Dictionary:"))
-				builder.WriteString("\n" + indentThree.Render("- "+dictionary) + "\n")
+				builder.WriteString(utils.IndentTwo.Render("Dictionary:"))
+				builder.WriteString("\n" + utils.IndentThree.Render("- "+dictionary) + "\n")
 			}
 			if useInSentence := def.UseInSentence; useInSentence != "" {
-				builder.WriteString(indentTwo.Render("Use in sentence:"))
-				builder.WriteString("\n" + indentThree.Render("- "+useInSentence) + "\n")
+				builder.WriteString(utils.IndentTwo.Render("Use in sentence:"))
+				builder.WriteString("\n" + utils.IndentThree.Render("- "+useInSentence) + "\n")
 			}
 			for key, synonymsList := range def.Synonyms {
-				builder.WriteString(indentTwo.Render("Synonyms:"))
-				builder.WriteString("\n" + indentThree.Render("- "))
-				for _, synonym := range synonymsList[:len(synonymsList)-1] {
-					builder.WriteString(synonym + ", ")
-				}
-				builder.WriteString(synonymsList[len(synonymsList)-1])
+				builder.WriteString(utils.IndentTwo.Render("Synonyms:"))
+				builder.WriteString("\n" + utils.IndentThree.Render("- "))
 				if key != "" {
-					builder.WriteString(" (" + key + ")")
+					builder.WriteString(" (" + key + ") ")
 				}
+				builder.WriteString(utils.PrintList(synonymsList))
 				builder.WriteString("\n")
 			}
 			if informal := def.Informal; informal != "" {
-				builder.WriteString(indentTwo.Render("Informal: "+informal) + "\n")
+				builder.WriteString(utils.IndentTwo.Render("Informal: "+informal) + "\n")
 			}
 			builder.WriteString("\n")
 		}
 	}
 	for category, translationsByCategory := range r.SingleTranslation {
-		builder.WriteString(titleSec.Render("Part of speech: "+
+		builder.WriteString(utils.TitleSec.Render("Part of speech: "+
 			getPartOfSpeechOrUndefined(category)) + "\n")
 		for singleWord, translations := range translationsByCategory {
-			builder.WriteString(listItem.Render("- "+singleWord) + ": ")
-			for _, word := range translations.Words[:len(translations.Words)-1] {
-				builder.WriteString(word + ", ")
-			}
-			builder.WriteString(translations.Words[len(translations.Words)-1] + "\n")
+			builder.WriteString(utils.ListItem.Render("- "+singleWord) + ": ")
+			builder.WriteString(utils.PrintList(translations.Words))
 		}
 	}
 	return builder.String()
