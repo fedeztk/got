@@ -27,7 +27,7 @@ jobs:
           sed -i "s|^pkgver=.*|pkgver=$version|" ./template/archlinux/PKGBUILD
 
       - name: Commit and push changes
-        uses: devops-infra/action-commit-push@v0.9.0
+        uses: devops-infra/action-commit-push@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           amend: true
